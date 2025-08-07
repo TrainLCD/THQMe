@@ -1,50 +1,143 @@
-# Welcome to your Expo app 👋
+# THQMe - Mobile Telemetry Monitoring App 📱
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+THQMe is the mobile companion app for [THQ (TrainLCD Telemetry Headquarters)](https://github.com/TrainLCD/THQ), providing real-time telemetry monitoring and visualization capabilities on mobile devices. Built with Expo and React Native, this app enables field monitoring of location data, speed metrics, and system logs through WebSocket connections.
 
-## Get started
+**Note**: THQ and THQMe are specifically designed for TrainLCD developers and the TrainLCD ecosystem. While the source code is open for transparency and learning purposes, these tools are optimized for TrainLCD's specific telemetry requirements and may not be suitable for other projects without significant modifications.
 
-1. Install dependencies
+## ✨ Features
+
+- **Real-time Telemetry Monitoring**: Monitor location data and system logs from mobile devices
+- **Cross-platform Support**: Runs on iOS, Android, and web platforms
+- **WebSocket Integration**: Connects to THQ servers for real-time data streaming
+- **Responsive Mobile UI**: Optimized interface for mobile and tablet devices
+- **Offline Capability**: Local data caching for intermittent connectivity scenarios
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v18 or later)
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)
+- For iOS development: Xcode and iOS Simulator
+- For Android development: Android Studio and Android Emulator
+
+### Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/TrainLCD/THQMe.git
+   cd THQMe
+   ```
+
+2. Install dependencies:
 
    ```bash
    npm install
    ```
 
-2. Start the app
-
+3. Start the development server:
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+### Running the App
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+In the output, you'll find options to open the app in:
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- **Development build**: For testing with native functionality
+- **iOS Simulator**: For iOS development and testing
+- **Android Emulator**: For Android development and testing
+- **Expo Go**: For quick testing and development (limited native functionality)
+- **Web Browser**: For web platform testing
 
-## Get a fresh project
+## 🏗️ Architecture
 
-When you're ready, run:
+THQMe is built using modern React Native and Expo technologies:
 
-```bash
-npm run reset-project
+- **Frontend**: React Native with Expo
+- **Routing**: Expo Router for file-based navigation
+- **State Management**: React hooks and context
+- **Networking**: WebSocket connections to THQ servers
+- **UI Components**: Custom themed components with dark mode support
+
+### Project Structure
+
+```
+app/
+├── (tabs)/              # Tab-based navigation screens
+│   ├── _layout.tsx      # Tab layout configuration
+│   ├── index.tsx        # Main monitoring dashboard
+│   └── explore.tsx      # Additional features
+├── _layout.tsx          # Root layout
+└── +not-found.tsx       # 404 error page
+
+components/
+├── ui/                  # Platform-specific UI components
+├── ThemedText.tsx       # Themed text component
+├── ThemedView.tsx       # Themed view component
+└── ...                  # Other reusable components
+
+constants/
+└── Colors.ts           # Color scheme definitions
+
+hooks/
+├── useColorScheme.ts    # Color scheme management
+└── useThemeColor.ts     # Theme color utilities
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 🛠️ Development
 
-## Learn more
+### Available Scripts
 
-To learn more about developing your project with Expo, look at the following resources:
+- `npm start` - Start Expo development server
+- `npm run android` - Start with Android emulator
+- `npm run ios` - Start with iOS simulator
+- `npm run web` - Start web version
+- `npm run lint` - Run ESLint
+- `npm run reset-project` - Reset to blank project template
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Configuration
 
-## Join the community
+The app can be configured to connect to different THQ server instances by modifying the WebSocket endpoint settings.
 
-Join our community of developers creating universal apps.
+## 🔗 Related Projects
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- [THQ](https://github.com/TrainLCD/THQ) - Main telemetry headquarters application
+- [TrainLCD Mobile App](https://github.com/TrainLCD/MobileApp) - The new sense mobile navigation app
+- [StationAPI](https://github.com/TrainLCD/StationAPI) - gRPC-Web API for nearby Japanese train stations
+
+## 🤝 Contributing
+
+We welcome contributions to THQMe from TrainLCD developers and contributors! Please note that this project is specifically designed for the TrainLCD ecosystem.
+
+Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run linting (`npm run lint`)
+5. Test on multiple platforms
+6. Commit your changes (`git commit -m 'Add amazing feature'`)
+7. Push to the branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
+
+## 📝 License
+
+This project is part of the TrainLCD ecosystem. Please refer to the license file for details.
+
+## 📞 Support
+
+For questions and support:
+
+- Open an issue on [GitHub](https://github.com/TrainLCD/THQMe/issues)
+- Contact the TrainLCD team
+- Check the [THQ documentation](https://github.com/TrainLCD/THQ) for server setup
+
+## 🌟 Learn More
+
+To learn more about the technologies used in this project:
+
+- [Expo Documentation](https://docs.expo.dev/): Learn about Expo development
+- [React Native Documentation](https://reactnative.dev/): Learn React Native fundamentals
+- [Expo Router](https://docs.expo.dev/router/introduction/): File-based navigation system
