@@ -124,7 +124,7 @@ Please follow these steps:
 
 ## 📝 License
 
-This project is part of the TrainLCD ecosystem. Please refer to the license file for details.
+This project is part of the TrainLCD ecosystem. Please see the [LICENSE](./LICENSE) file for details.
 
 ## 📞 Support
 
