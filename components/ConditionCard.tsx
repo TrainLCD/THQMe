@@ -3,17 +3,32 @@ import { StyleSheet, Text, View } from "react-native";
 import { DotsOverlay } from "./DotsOverlay";
 import { IconSymbol } from "./ui/IconSymbol";
 
-type Props = {};
+type Props = {
+  scoreLabel: "Good" | "Moderate" | "Poor" | "Unknown";
+};
 
-export function ConditionCard({}: Props) {
+export function ConditionCard({ scoreLabel }: Props) {
+  const colors = {
+    Good: ["#34C759", "#386641"],
+    Moderate: ["#FFCC00", "#7A7A00"],
+    Poor: ["#FF3B30", "#BF2C2C"],
+    Unknown: ["#A9A9A9", "#7D7D7D"],
+  } as const;
+  const icons = {
+    Good: "checkmark.circle.fill",
+    Moderate: "minus.circle.fill",
+    Poor: "xmark.circle.fill",
+    Unknown: "questionmark.circle.fill",
+  } as const;
+
   return (
-    <LinearGradient colors={["#34C759", "#386641"]} style={styles.container}>
+    <LinearGradient colors={colors[scoreLabel]} style={styles.container}>
       <DotsOverlay style={styles.dotsOverlay} />
       <View style={styles.content}>
-        <IconSymbol name="checkmark.circle.fill" color="white" size={64} />
+        <IconSymbol name={icons[scoreLabel]} color="white" size={64} />
         <View style={styles.labels}>
           <Text style={styles.overallScoreLabel}>Overall condition score</Text>
-          <Text style={styles.scoreLabel}>Good</Text>
+          <Text style={styles.scoreLabel}>{scoreLabel}</Text>
         </View>
       </View>
     </LinearGradient>

@@ -6,14 +6,35 @@ import { ConditionCard } from "@/components/ConditionCard";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useListenActivities } from "@/hooks/useListenActivities";
+import { calcOverallScore } from "@/utils/scoring";
+import { useMemo } from "react";
 
 export default function HomeScreen() {
   const { activities } = useListenActivities();
 
+  const overallScore = useMemo(() => {
+    const clients = activities.map((a) => ({
+      id: a.id,
+      samples: [
+        {
+          ts: a.timestamp,
+          accuracyM: a.coords.accuracy,
+          speedKmh: a.coords.speed,
+        },
+      ],
+    }));
+    return calcOverallScore(
+      clients,
+      activities[activities.length - 1]?.timestamp
+    );
+  }, [activities]);
+
   return (
     <DashboardScrollView>
       <ThemedView>
-        <ConditionCard />
+        <ConditionCard
+          scoreLabel={activities.length ? overallScore.label : "Unknown"}
+        />
         <ThemedView style={styles.space}>
           <ThemedText style={styles.headingText}>Latest activities</ThemedText>
           <ActivityList data={activities} style={styles.activityList} />
