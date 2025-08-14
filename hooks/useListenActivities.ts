@@ -48,7 +48,7 @@ export const useListenActivities = () => {
     }
   }, []);
 
-  const handleError = useCallback((error: Event) => {
+  const handleError = useCallback((error: unknown) => {
     console.error("WebSocket error:", error);
   }, []);
 
