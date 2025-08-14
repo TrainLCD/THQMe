@@ -5,15 +5,18 @@ import DashboardScrollView from "@/components/AppScrollView";
 import { ConditionCard } from "@/components/ConditionCard";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useListenActivities } from "@/hooks/useListenActivities";
 
 export default function HomeScreen() {
+  const { activities } = useListenActivities();
+
   return (
     <DashboardScrollView>
       <ThemedView>
         <ConditionCard />
         <ThemedView style={styles.space}>
           <ThemedText style={styles.headingText}>Latest activities</ThemedText>
-          <ActivityList style={styles.activityList} />
+          <ActivityList data={activities} style={styles.activityList} />
         </ThemedView>
       </ThemedView>
     </DashboardScrollView>
