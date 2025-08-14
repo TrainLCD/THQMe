@@ -32,9 +32,7 @@ export default function HomeScreen() {
   return (
     <DashboardScrollView>
       <ThemedView>
-        <ConditionCard
-          scoreLabel={activities.length ? overallScore.label : "Unknown"}
-        />
+        <ConditionCard scoreLabel={overallScore.label ?? "Unknown"} />
         <ThemedView style={styles.space}>
           <ThemedText style={styles.headingText}>Latest activities</ThemedText>
           <ActivityList data={activities} style={styles.activityList} />
