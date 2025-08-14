@@ -7,6 +7,8 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { useWebSocket } from "./useWebSocket";
 
+const MAX_BUFFER = 500;
+
 export const useListenActivities = () => {
   const [activities, setActivities] = useState<LocationUpdateData[]>([]);
   const [logs, setLogs] = useState<LogData[]>([]);
@@ -31,15 +33,15 @@ export const useListenActivities = () => {
     try {
       const data = ReceivedDataSchema.parse(payload);
       if (data.type === "location_update") {
-        setActivities((prev) => [data, ...prev]);
+        setActivities((prev) => [data, ...prev].slice(0, MAX_BUFFER));
       }
 
       if (data.type === "log") {
-        setLogs((prev) => [data, ...prev]);
+        setLogs((prev) => [data, ...prev].slice(0, MAX_BUFFER));
       }
 
       if (data.type === "unknown") {
-        setErrors((prev) => [data, ...prev]);
+        setErrors((prev) => [data, ...prev].slice(0, MAX_BUFFER));
       }
     } catch (error) {
       console.error("WebSocket message parsing error:", error);
