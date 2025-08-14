@@ -1,5 +1,6 @@
-import { ReceivedData } from "@/domain/received";
+import { LocationUpdateData } from "@/domain/received";
 import { MOVING_STATE } from "@/domain/state";
+import { LocationTriageKind } from "@/domain/triage";
 import dayjs from "dayjs";
 import { useMemo } from "react";
 import { StyleSheet } from "react-native";
@@ -9,7 +10,7 @@ import { ThemedView } from "./ThemedView";
 import { IconSymbol } from "./ui/IconSymbol";
 
 type Props = {
-  item: ReceivedData;
+  item: LocationUpdateData;
 };
 
 export function ActivityCell({ item }: Props) {
@@ -32,44 +33,64 @@ export function ActivityCell({ item }: Props) {
     return dayjs(item.timestamp).format("MM/DD HH:mm:ss");
   }, [item.timestamp]);
 
-  const accuracyStyle = useMemo(() => {
-    if (item.accuracy) {
-      if (item.accuracy < 20) {
-        return styles.good;
-      }
-      if (item.accuracy < 50) {
-        return styles.moderate;
-      }
-      return styles.poor;
+  const accuracyKind = useMemo<LocationTriageKind | null>(() => {
+    const accuracy = item.coords.accuracy;
+    if (accuracy == null || Number.isNaN(accuracy)) {
+      return null;
     }
-    return styles.poor;
-  }, [item.accuracy]);
+    if (accuracy <= 12) {
+      return "high";
+    }
+    if (accuracy <= 35) {
+      return "moderate";
+    }
+    return "low";
+  }, [item.coords.accuracy]);
+
+  const accuracyStyle = useMemo(() => {
+    switch (accuracyKind) {
+      case "high":
+        return styles.good;
+      case "moderate":
+        return styles.moderate;
+      case "low":
+        return styles.poor;
+      default:
+        return null;
+    }
+  }, [accuracyKind]);
 
   const accuracyText = useMemo(() => {
-    if (item.accuracy) {
-      if (item.accuracy <= 12) {
+    switch (accuracyKind) {
+      case "high":
         return "High Accuracy";
-      }
-      if (item.accuracy <= 35) {
+      case "moderate":
         return "Moderate Accuracy";
-      }
-      return "Low Accuracy";
+      case "low":
+        return "Low Accuracy";
+      default:
+        return null;
     }
-    return "Low Accuracy";
-  }, [item.accuracy]);
+  }, [accuracyKind]);
 
   const scoreIconName = useMemo(() => {
-    if (item.accuracy) {
-      if (item.accuracy <= 12) {
+    switch (accuracyKind) {
+      case "high":
         return "checkmark.circle.fill";
-      }
-      if (item.accuracy <= 35) {
+      case "moderate":
         return "minus.circle.fill";
-      }
-      return "xmark.circle.fill";
+      case "low":
+        return "xmark.circle.fill";
+      default:
+        return null;
     }
-    return "xmark.circle.fill";
-  }, [item.accuracy]);
+  }, [accuracyKind]);
+
+  const speedKMH = useMemo(() => {
+    const s = item.coords.speed;
+    if (s == null || Number.isNaN(s)) return null;
+    return s * 3.6;
+  }, [item.coords.speed]);
 
   return (
     <ThemedView key={item.id} style={styles.item}>
@@ -79,22 +100,26 @@ export function ActivityCell({ item }: Props) {
           {formedDate} <ThemedText style={styles.bold}>{stateText}</ThemedText>
         </ThemedText>
         <ThemedText style={styles.leading}>
-          {item.speed?.toFixed(1) ?? "-"}
+          {speedKMH !== null ? speedKMH.toFixed(1) : "-"}
           <ThemedText style={styles.bold}>km/h</ThemedText>
         </ThemedText>
         <ThemedText style={[styles.bold, styles.accuracy, accuracyStyle]}>
-          {accuracyText}{" "}
           <ThemedText style={styles.semibold}>
-            ±{item.accuracy?.toFixed(0) ?? "-"}m
-          </ThemedText>
+            {item.coords.accuracy != null && !Number.isNaN(item.coords.accuracy)
+              ? `±${item.coords.accuracy.toFixed(0)}m`
+              : "-"}
+          </ThemedText>{" "}
+          {accuracyText}
         </ThemedText>
       </ThemedView>
       <ThemedView style={styles.conditionContainer}>
-        <IconSymbol
-          name={scoreIconName}
-          color={accuracyStyle.color}
-          size={48}
-        />
+        {scoreIconName && accuracyStyle && (
+          <IconSymbol
+            name={scoreIconName}
+            color={StyleSheet.flatten(accuracyStyle)?.color as string}
+            size={48}
+          />
+        )}
       </ThemedView>
     </ThemedView>
   );

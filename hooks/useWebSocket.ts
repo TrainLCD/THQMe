@@ -1,95 +1,183 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-// 自動リトライ設定
-const DEFAULT_MAX_RETRIES = 5;
-const DEFAULT_RETRY_INTERVAL = 3000; // ms
+import { useCallback, useEffect, useRef, useState } from "react";
 
-export type WebSocketStatus = 'connecting' | 'open' | 'closing' | 'closed' | 'error';
-
-interface UseWebSocketOptions {
-	onOpen?: (event: Event) => void;
-	onClose?: (event: CloseEvent) => void;
-	onError?: (event: Event) => void;
-	onMessage?: (event: MessageEvent) => void;
-	protocols?: string | string[];
+export interface UseWebSocketOptions {
+  url: string | undefined;
+  onOpen?: () => void;
+  onMessage?: (data: any) => void;
+  onClose?: (ev?: unknown) => void;
+  onError?: (error: unknown) => void;
+  autoReconnect?: boolean;
+  reconnectInterval?: number;
 }
 
-export function useWebSocket(
-	url: string,
-	options: UseWebSocketOptions = {}
-): {
-	send: (data: string | ArrayBufferLike | Blob | ArrayBufferView) => void;
-	status: WebSocketStatus;
-	lastMessage: MessageEvent | null;
-	close: () => void;
-} {
-	const wsRef = useRef<WebSocket | null>(null);
-	const [status, setStatus] = useState<WebSocketStatus>('connecting');
-	const [lastMessage, setLastMessage] = useState<MessageEvent | null>(null);
-
-	const retryCountRef = useRef(0);
-	const retryTimeoutRef = useRef<number | null>(null);
-
-	const connect = useCallback(() => {
-		const ws = new WebSocket(url, options.protocols);
-		wsRef.current = ws;
-		setStatus('connecting');
-
-		ws.onopen = (event) => {
-			setStatus('open');
-			retryCountRef.current = 0;
-			options.onOpen?.(event);
-		};
-		ws.onclose = (event) => {
-			setStatus('closed');
-			options.onClose?.(event);
-			// 自動リトライ
-			if (retryCountRef.current < DEFAULT_MAX_RETRIES) {
-				retryCountRef.current += 1;
-				retryTimeoutRef.current = window.setTimeout(() => {
-					connect();
-				}, DEFAULT_RETRY_INTERVAL);
-			}
-		};
-		ws.onerror = (event) => {
-			setStatus('error');
-			options.onError?.(event);
-			// 自動リトライ
-			if (retryCountRef.current < DEFAULT_MAX_RETRIES) {
-				retryCountRef.current += 1;
-				retryTimeoutRef.current = window.setTimeout(() => {
-					connect();
-				}, DEFAULT_RETRY_INTERVAL);
-			}
-		};
-		ws.onmessage = (event) => {
-			setLastMessage(event);
-			options.onMessage?.(event);
-		};
-	}, [url, options]);
-
-			useEffect(() => {
-				connect();
-				return () => {
-					setStatus('closing');
-					wsRef.current?.close();
-					if (retryTimeoutRef.current) {
-						clearTimeout(retryTimeoutRef.current);
-					}
-					retryCountRef.current = 0;
-				};
-			}, [connect]);
-
-	const send = useCallback((data: string | ArrayBufferLike | Blob | ArrayBufferView) => {
-		if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-			wsRef.current.send(data);
-		}
-	}, []);
-
-	const close = useCallback(() => {
-		if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-			wsRef.current.close();
-		}
-	}, []);
-
-	return { send, status, lastMessage, close };
+export interface UseWebSocketReturn {
+  isConnected: boolean;
+  send: (data: any) => void;
+  disconnect: () => void;
+  connect: () => void;
 }
+
+export const useWebSocket = (
+  options: UseWebSocketOptions
+): UseWebSocketReturn => {
+  const {
+    url,
+    onOpen,
+    onMessage,
+    onClose,
+    onError,
+    autoReconnect = false,
+    reconnectInterval = 5000,
+  } = options;
+
+  const [isConnected, setIsConnected] = useState(false);
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+  const manuallyClosedRef = useRef<boolean>(false);
+  // 最新のコールバックを保持
+  const onOpenRef = useRef<typeof onOpen>(onOpen);
+  const onMessageRef = useRef<typeof onMessage>(onMessage);
+  const onCloseRef = useRef<typeof onClose>(onClose);
+  const onErrorRef = useRef<typeof onError>(onError);
+  useEffect(() => void (onOpenRef.current = onOpen), [onOpen]);
+  useEffect(() => void (onMessageRef.current = onMessage), [onMessage]);
+  useEffect(() => void (onCloseRef.current = onClose), [onClose]);
+  useEffect(() => void (onErrorRef.current = onError), [onError]);
+
+  const connect = useCallback(() => {
+    if (!url) {
+      return;
+    }
+
+    // 残存再接続タイマーを掃除
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
+    // 手動切断状態を解除
+    manuallyClosedRef.current = false;
+    if (
+      wsRef.current &&
+      (wsRef.current.readyState === WebSocket.OPEN ||
+        wsRef.current.readyState === WebSocket.CONNECTING ||
+        wsRef.current.readyState === WebSocket.CLOSING)
+    ) {
+      return;
+    }
+
+    try {
+      const ws = new WebSocket(url);
+
+      ws.onopen = () => {
+        // 旧インスタンス由来の open は無視
+        if (wsRef.current && wsRef.current !== ws) {
+          return;
+        }
+        setIsConnected(true);
+        onOpenRef.current?.();
+      };
+
+      ws.onmessage = (event) => {
+        // 旧インスタンス由来の message は無視し、幽霊配信を防ぐ
+        if (wsRef.current && wsRef.current !== ws) {
+          return;
+        }
+        const raw = event.data as unknown;
+
+        if (typeof raw === "string") {
+          try {
+            onMessageRef.current?.(JSON.parse(raw));
+            return;
+          } catch (error) {
+            console.error("WebSocket message parsing error:", error);
+          }
+        }
+        onMessageRef.current?.(raw);
+      };
+
+      ws.onclose = (ev) => {
+        // 旧インスタンス由来の close は無視し、幽霊再接続を防ぐ
+        if (wsRef.current && wsRef.current !== ws) {
+          return;
+        }
+        setIsConnected(false);
+        wsRef.current = null;
+        onCloseRef.current?.(ev);
+
+        if (autoReconnect && !manuallyClosedRef.current) {
+          reconnectTimeoutRef.current = setTimeout(() => {
+            // 実行済みタイマーを解放
+            reconnectTimeoutRef.current = null;
+            connect();
+          }, reconnectInterval);
+        }
+      };
+
+      ws.onerror = (error) => {
+        // 旧インスタンス由来の error は無視
+        if (wsRef.current && wsRef.current !== ws) {
+          return;
+        }
+        onErrorRef.current?.(error);
+      };
+
+      wsRef.current = ws;
+    } catch (error) {
+      console.error("WebSocket connection failed:", error);
+      onErrorRef.current?.(error);
+      if (autoReconnect && !manuallyClosedRef.current) {
+        reconnectTimeoutRef.current = setTimeout(() => {
+          reconnectTimeoutRef.current = null;
+          connect();
+        }, reconnectInterval);
+      }
+    }
+  }, [url, autoReconnect, reconnectInterval]);
+
+  const disconnect = useCallback(() => {
+    // 以降の onclose による自動再接続を抑止
+    manuallyClosedRef.current = true;
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+    setIsConnected(false);
+  }, []);
+
+  const send = useCallback((data: any) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      try {
+        const message = typeof data === "string" ? data : JSON.stringify(data);
+        wsRef.current.send(message);
+      } catch (e) {
+        console.error("WebSocket send failed:", e);
+        onErrorRef.current?.(e);
+      }
+    } else {
+      console.warn("WebSocket is not connected");
+    }
+  }, []);
+
+  useEffect(() => {
+    connect();
+
+    return () => {
+      disconnect();
+    };
+  }, [connect, disconnect]);
+
+  return {
+    isConnected,
+    send,
+    disconnect,
+    connect,
+  };
+};
