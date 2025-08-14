@@ -4,8 +4,8 @@ export interface UseWebSocketOptions {
   url: string | undefined;
   onOpen?: () => void;
   onMessage?: (data: any) => void;
-  onClose?: () => void;
-  onError?: (error: Event) => void;
+  onClose?: (ev?: CloseEvent) => void;
+  onError?: (error: unknown) => void;
   autoReconnect?: boolean;
   reconnectInterval?: number;
 }
@@ -89,10 +89,14 @@ export const useWebSocket = (
         onMessageRef.current?.(raw);
       };
 
-      ws.onclose = () => {
+      ws.onclose = (ev) => {
+        // 旧インスタンス由来の close は無視し、幽霊再接続を防ぐ
+        if (wsRef.current && wsRef.current !== ws) {
+          return;
+        }
         setIsConnected(false);
         wsRef.current = null;
-        onCloseRef.current?.();
+        onCloseRef.current?.(ev as CloseEvent);
 
         if (autoReconnect && !manuallyClosedRef.current) {
           reconnectTimeoutRef.current = setTimeout(() => {
