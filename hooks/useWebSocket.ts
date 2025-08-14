@@ -76,6 +76,10 @@ export const useWebSocket = (
       };
 
       ws.onmessage = (event) => {
+        // 旧インスタンス由来の message は無視し、幽霊配信を防ぐ
+        if (wsRef.current && wsRef.current !== ws) {
+          return;
+        }
         const raw = event.data as unknown;
 
         if (typeof raw === "string") {
