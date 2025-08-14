@@ -13,38 +13,27 @@ export default function HomeScreen() {
   const { activities } = useListenActivities();
 
   const overallScore = useMemo(() => {
-    if (activities.length === 0) return null;
-
-    // id ごとにサンプルを集約
-    const byId = new Map<
-      string,
-      {
-        id: string;
-        samples: { ts: number; accuracyM?: number; speedKmh?: number }[];
-      }
-    >();
-    for (const a of activities) {
-      const entry = byId.get(a.id) ?? { id: a.id, samples: [] };
-      entry.samples.push({
-        ts: a.timestamp,
-        accuracyM: a.coords.accuracy,
-        // m/s → km/h 変換（未定義なら保持）
-        speedKmh: a.coords.speed != null ? a.coords.speed * 3.6 : undefined,
-      });
-      byId.set(a.id, entry);
-    }
-    const clients = Array.from(byId.values());
-    const nowTs = activities[0]?.timestamp ?? Date.now();
-    return calcOverallScore(clients, nowTs);
+    const clients = activities.map((a) => ({
+      id: a.id,
+      samples: [
+        {
+          ts: a.timestamp,
+          accuracyM: a.coords.accuracy,
+          speedKmh: a.coords.speed,
+        },
+      ],
+    }));
+    return calcOverallScore(
+      clients,
+      activities[activities.length - 1]?.timestamp
+    );
   }, [activities]);
 
   return (
     <DashboardScrollView>
       <ThemedView>
         <ConditionCard
-          scoreLabel={
-            activities.length ? overallScore?.label ?? "Unknown" : "Unknown"
-          }
+          scoreLabel={activities.length ? overallScore.label : "Unknown"}
         />
         <ThemedView style={styles.space}>
           <ThemedText style={styles.headingText}>Latest activities</ThemedText>
