@@ -108,7 +108,11 @@ export function calcOverallScore(
   const scores = clients
     .map((c) => scoreClient(c, now, expectedHz))
     .sort((a, b) => a - b);
-  const p50 = scores.length ? scores[Math.floor((scores.length - 1) * 0.5)] : 0;
+  const p50 = scores.length
+    ? scores.length % 2 === 1
+      ? scores[Math.floor(scores.length / 2)]
+      : (scores[scores.length / 2 - 1] + scores[scores.length / 2]) / 2
+    : 0;
   const total = Math.max(1, scores.length);
   const R = scores.filter((s) => s < 40).length / total;
   const Y = scores.filter((s) => s >= 40 && s < 70).length / total;
