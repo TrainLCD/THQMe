@@ -4,7 +4,7 @@ export interface UseWebSocketOptions {
   url: string | undefined;
   onOpen?: () => void;
   onMessage?: (data: any) => void;
-  onClose?: (ev?: CloseEvent) => void;
+  onClose?: (ev?: unknown) => void;
   onError?: (error: unknown) => void;
   autoReconnect?: boolean;
   reconnectInterval?: number;
@@ -105,7 +105,7 @@ export const useWebSocket = (
         }
         setIsConnected(false);
         wsRef.current = null;
-        onCloseRef.current?.(ev as CloseEvent);
+        onCloseRef.current?.(ev);
 
         if (autoReconnect && !manuallyClosedRef.current) {
           reconnectTimeoutRef.current = setTimeout(() => {
