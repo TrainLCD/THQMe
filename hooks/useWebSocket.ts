@@ -51,6 +51,12 @@ export const useWebSocket = (
       return;
     }
 
+    // 残存再接続タイマーを掃除
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
     // 手動切断状態を解除
     manuallyClosedRef.current = false;
     if (
@@ -90,6 +96,8 @@ export const useWebSocket = (
 
         if (autoReconnect && !manuallyClosedRef.current) {
           reconnectTimeoutRef.current = setTimeout(() => {
+            // 実行済みタイマーを解放
+            reconnectTimeoutRef.current = null;
             connect();
           }, reconnectInterval);
         }
@@ -103,6 +111,12 @@ export const useWebSocket = (
     } catch (error) {
       console.error("WebSocket connection failed:", error);
       onErrorRef.current?.(error as unknown as Event);
+    }
+    if (autoReconnect && !manuallyClosedRef.current) {
+      reconnectTimeoutRef.current = setTimeout(() => {
+        reconnectTimeoutRef.current = null;
+        connect();
+      }, reconnectInterval);
     }
   }, [url, autoReconnect, reconnectInterval]);
 
@@ -123,8 +137,13 @@ export const useWebSocket = (
 
   const send = useCallback((data: any) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      const message = typeof data === "string" ? data : JSON.stringify(data);
-      wsRef.current.send(message);
+      try {
+        const message = typeof data === "string" ? data : JSON.stringify(data);
+        wsRef.current.send(message);
+      } catch (e) {
+        console.error("WebSocket send failed:", e);
+        onErrorRef.current?.(e as unknown as Event);
+      }
     } else {
       console.warn("WebSocket is not connected");
     }
