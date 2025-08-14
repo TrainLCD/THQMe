@@ -23,10 +23,7 @@ export default function HomeScreen() {
         },
       ],
     }));
-    return calcOverallScore(
-      clients,
-      activities[activities.length - 1]?.timestamp
-    );
+    return calcOverallScore(clients, activities[0]?.timestamp);
   }, [activities]);
 
   return (
