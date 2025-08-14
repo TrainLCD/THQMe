@@ -111,12 +111,12 @@ export const useWebSocket = (
     } catch (error) {
       console.error("WebSocket connection failed:", error);
       onErrorRef.current?.(error as unknown as Event);
-    }
-    if (autoReconnect && !manuallyClosedRef.current) {
-      reconnectTimeoutRef.current = setTimeout(() => {
-        reconnectTimeoutRef.current = null;
-        connect();
-      }, reconnectInterval);
+      if (autoReconnect && !manuallyClosedRef.current) {
+        reconnectTimeoutRef.current = setTimeout(() => {
+          reconnectTimeoutRef.current = null;
+          connect();
+        }, reconnectInterval);
+      }
     }
   }, [url, autoReconnect, reconnectInterval]);
 

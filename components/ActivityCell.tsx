@@ -86,11 +86,11 @@ export function ActivityCell({ item }: Props) {
     }
   }, [accuracyKind]);
 
-  const speedKMH = useMemo(
-    () =>
-      (item.coords.speed && Math.round((item.coords.speed * 3600) / 1000)) ?? 0,
-    [item.coords.speed]
-  );
+  const speedKMH = useMemo(() => {
+    const s = item.coords.speed;
+    if (s == null || Number.isNaN(s)) return null;
+    return s * 3.6;
+  }, [item.coords.speed]);
 
   return (
     <ThemedView key={item.id} style={styles.item}>
@@ -100,12 +100,14 @@ export function ActivityCell({ item }: Props) {
           {formedDate} <ThemedText style={styles.bold}>{stateText}</ThemedText>
         </ThemedText>
         <ThemedText style={styles.leading}>
-          {speedKMH?.toFixed(1) ?? "-"}
+          {speedKMH !== null ? speedKMH.toFixed(1) : "-"}
           <ThemedText style={styles.bold}>km/h</ThemedText>
         </ThemedText>
         <ThemedText style={[styles.bold, styles.accuracy, accuracyStyle]}>
           <ThemedText style={styles.semibold}>
-            ±{item.coords.accuracy?.toFixed(0) ?? "-"}m
+            {item.coords.accuracy != null && !Number.isNaN(item.coords.accuracy)
+              ? `±${item.coords.accuracy.toFixed(0)}m`
+              : "-"}
           </ThemedText>{" "}
           {accuracyText}
         </ThemedText>
@@ -114,7 +116,7 @@ export function ActivityCell({ item }: Props) {
         {scoreIconName && accuracyStyle && (
           <IconSymbol
             name={scoreIconName}
-            color={accuracyStyle.color}
+            color={StyleSheet.flatten(accuracyStyle)?.color as string}
             size={48}
           />
         )}
