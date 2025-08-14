@@ -118,7 +118,7 @@ export const useWebSocket = (
       wsRef.current = ws;
     } catch (error) {
       console.error("WebSocket connection failed:", error);
-      onErrorRef.current?.(error as unknown as Event);
+      onErrorRef.current?.(error);
       if (autoReconnect && !manuallyClosedRef.current) {
         reconnectTimeoutRef.current = setTimeout(() => {
           reconnectTimeoutRef.current = null;
@@ -150,7 +150,7 @@ export const useWebSocket = (
         wsRef.current.send(message);
       } catch (e) {
         console.error("WebSocket send failed:", e);
-        onErrorRef.current?.(e as unknown as Event);
+        onErrorRef.current?.(e);
       }
     } else {
       console.warn("WebSocket is not connected");
