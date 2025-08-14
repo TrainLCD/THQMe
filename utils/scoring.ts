@@ -17,7 +17,8 @@
  * @returns 0〜100点
  */
 function accScoreLinear(m?: number, speedKmh = 0): number {
-  if (m == null || !isFinite(m)) return 0;
+  if (typeof m !== "number" || !Number.isFinite(m)) return 0;
+
   let g = 12,
     y = 35,
     r = 80;
@@ -62,9 +63,7 @@ type Client = {
  */
 function scoreClient(c: Client, now: number, expectedHz = 1): number {
   const W = 90_000;
-  const win = c.samples
-    .filter((s) => now - s.ts <= W)
-    .sort((a, b) => a.ts - b.ts);
+  const win = c.samples.filter((s) => now - s.ts <= W);
   if (!win.length) return 0;
 
   const accs = win
@@ -75,7 +74,8 @@ function scoreClient(c: Client, now: number, expectedHz = 1): number {
     accs.length > 2 * trim ? accs.slice(trim, accs.length - trim) : accs;
   const A = trimmed.reduce((a, b) => a + b, 0) / trimmed.length;
 
-  const age = (now - win[win.length - 1].ts) / 1000;
+  const lastTs = win.reduce((mx, s) => (s.ts > mx ? s.ts : mx), -Infinity);
+  const age = Math.max(0, (now - lastTs) / 1000);
   const F = age <= 10 ? 100 : age >= 60 ? 0 : 100 * (1 - (age - 10) / 50);
 
   const expected = Math.max(1, Math.round((W / 1000) * expectedHz));
