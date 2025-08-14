@@ -54,6 +54,7 @@ class MockWebSocket {
 }
 
 // グローバルのWebSocketを置き換え
+const OriginalWebSocket = global.WebSocket as any;
 global.WebSocket = MockWebSocket as any;
 
 describe("useWebSocket", () => {
@@ -64,6 +65,10 @@ describe("useWebSocket", () => {
 
   afterEach(() => {
     jest.useRealTimers();
+  });
+
+  afterAll(() => {
+    global.WebSocket = OriginalWebSocket;
   });
 
   it("should connect and update connection status", async () => {
@@ -223,6 +228,10 @@ describe("useWebSocket", () => {
       })
     );
 
+    // MockWebSocket の onopen(10ms) を消化
+    act(() => {
+      jest.advanceTimersByTime(10);
+    });
     await waitFor(() => {
       expect(result.current.isConnected).toBe(true);
     });
@@ -232,6 +241,10 @@ describe("useWebSocket", () => {
       MockWebSocket.instances[0].close();
     });
 
+    // MockWebSocket の onclose(10ms) を消化
+    act(() => {
+      jest.advanceTimersByTime(10);
+    });
     await waitFor(() => {
       expect(result.current.isConnected).toBe(false);
     });

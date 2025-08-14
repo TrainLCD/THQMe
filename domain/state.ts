@@ -1,4 +1,4 @@
-import * as z from "zod";
+import { z } from "zod";
 
 export const MOVING_STATE = {
   ARRIVED: "arrived",
@@ -7,5 +7,10 @@ export const MOVING_STATE = {
   MOVING: "moving",
 } as const;
 
-export const MovingStateSchema = z.enum(MOVING_STATE);
+export const MovingStateSchema = z.enum([
+  MOVING_STATE.ARRIVED,
+  MOVING_STATE.APPROACHING,
+  MOVING_STATE.PASSING,
+  MOVING_STATE.MOVING,
+]);
 export type MovingState = z.infer<typeof MovingStateSchema>;

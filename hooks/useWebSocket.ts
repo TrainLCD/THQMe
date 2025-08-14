@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface UseWebSocketOptions {
-  url: string;
+  url: string | undefined;
   onOpen?: () => void;
   onMessage?: (data: any) => void;
   onClose?: () => void;
@@ -35,9 +35,19 @@ export const useWebSocket = (
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   );
-
+  const manuallyClosedRef = useRef<boolean>(false);
   const connect = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
+    if (!url) {
+      return;
+    }
+
+    // 手動切断状態を解除
+    manuallyClosedRef.current = false;
+    if (
+      wsRef.current &&
+      (wsRef.current.readyState === WebSocket.OPEN ||
+        wsRef.current.readyState === WebSocket.CONNECTING)
+    ) {
       return;
     }
 
@@ -63,7 +73,7 @@ export const useWebSocket = (
         wsRef.current = null;
         onClose?.();
 
-        if (autoReconnect) {
+        if (autoReconnect && !manuallyClosedRef.current) {
           reconnectTimeoutRef.current = setTimeout(() => {
             connect();
           }, reconnectInterval);
@@ -77,6 +87,7 @@ export const useWebSocket = (
       wsRef.current = ws;
     } catch (error) {
       console.error("WebSocket connection failed:", error);
+      onError?.(error as unknown as Event);
     }
   }, [
     url,
@@ -89,6 +100,8 @@ export const useWebSocket = (
   ]);
 
   const disconnect = useCallback(() => {
+    // 以降の onclose による自動再接続を抑止
+    manuallyClosedRef.current = true;
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;

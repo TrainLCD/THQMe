@@ -1,4 +1,4 @@
-import * as z from "zod";
+import { z } from "zod";
 import { MovingStateSchema } from "./state";
 
 const LogDataSchema = z.object({

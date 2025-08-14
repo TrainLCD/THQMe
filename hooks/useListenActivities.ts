@@ -14,7 +14,9 @@ export const useListenActivities = () => {
 
   const wsUrl = process.env.EXPO_PUBLIC_WEBSOCKET_ENDPOINT;
   if (!wsUrl) {
-    throw new Error("EXPO_PUBLIC_WEBSOCKET_ENDPOINT is not defined");
+    console.warn(
+      "EXPO_PUBLIC_WEBSOCKET_ENDPOINT is not defined; skip WebSocket connection"
+    );
   }
 
   const handleOpen = useCallback(() => {
@@ -25,10 +27,9 @@ export const useListenActivities = () => {
     console.log("WebSocket connection closed");
   }, []);
 
-  const handleMessage = useCallback((message: MessageEvent) => {
+  const handleMessage = useCallback((payload: unknown) => {
     try {
-      const data = ReceivedDataSchema.parse(message);
-
+      const data = ReceivedDataSchema.parse(payload);
       if (data.type === "location_update") {
         setActivities((prev) => [data, ...prev]);
       }
@@ -49,20 +50,20 @@ export const useListenActivities = () => {
     console.error("WebSocket error:", error);
   }, []);
 
-  const socket = useWebSocket({
+  const { isConnected, send } = useWebSocket({
     url: wsUrl,
     onOpen: handleOpen,
     onClose: handleClose,
     onMessage: handleMessage,
     onError: handleError,
+    autoReconnect: true,
   });
 
   useEffect(() => {
-    if (socket.isConnected) {
-      socket.send({ type: "subscribe" });
+    if (wsUrl && isConnected) {
+      send({ type: "subscribe" });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket.isConnected]);
+  }, [isConnected, send, wsUrl]);
 
   return { activities, logs, errors };
 };

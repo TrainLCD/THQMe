@@ -34,17 +34,17 @@ export function ActivityCell({ item }: Props) {
   }, [item.timestamp]);
 
   const accuracyKind = useMemo<LocationTriageKind | null>(() => {
-    const accuracy = item.coords.accuracy ?? 0;
-    if (accuracy >= 0) {
-      if (accuracy <= 12) {
-        return "high";
-      }
-      if (accuracy <= 35) {
-        return "moderate";
-      }
-      return "low";
+    const accuracy = item.coords.accuracy;
+    if (accuracy == null || Number.isNaN(accuracy)) {
+      return null;
     }
-    return null;
+    if (accuracy <= 12) {
+      return "high";
+    }
+    if (accuracy <= 35) {
+      return "moderate";
+    }
+    return "low";
   }, [item.coords.accuracy]);
 
   const accuracyStyle = useMemo(() => {
@@ -98,18 +98,20 @@ export function ActivityCell({ item }: Props) {
           <ThemedText style={styles.bold}>km/h</ThemedText>
         </ThemedText>
         <ThemedText style={[styles.bold, styles.accuracy, accuracyStyle]}>
-          {accuracyText}{" "}
           <ThemedText style={styles.semibold}>
             ±{item.coords.accuracy?.toFixed(0) ?? "-"}m
-          </ThemedText>
+          </ThemedText>{" "}
+          {accuracyText}
         </ThemedText>
       </ThemedView>
       <ThemedView style={styles.conditionContainer}>
-        <IconSymbol
-          name={scoreIconName}
-          color={accuracyStyle.color}
-          size={48}
-        />
+        {scoreIconName && accuracyStyle && (
+          <IconSymbol
+            name={scoreIconName}
+            color={accuracyStyle.color}
+            size={48}
+          />
+        )}
       </ThemedView>
     </ThemedView>
   );
