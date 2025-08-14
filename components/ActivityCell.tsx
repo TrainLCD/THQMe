@@ -86,6 +86,12 @@ export function ActivityCell({ item }: Props) {
     }
   }, [accuracyKind]);
 
+  const speedKMH = useMemo(
+    () =>
+      (item.coords.speed && Math.round((item.coords.speed * 3600) / 1000)) ?? 0,
+    [item.coords.speed]
+  );
+
   return (
     <ThemedView key={item.id} style={styles.item}>
       <StateIcon state={item.state} />
@@ -94,7 +100,7 @@ export function ActivityCell({ item }: Props) {
           {formedDate} <ThemedText style={styles.bold}>{stateText}</ThemedText>
         </ThemedText>
         <ThemedText style={styles.leading}>
-          {item.coords.speed?.toFixed(1) ?? "-"}
+          {speedKMH?.toFixed(1) ?? "-"}
           <ThemedText style={styles.bold}>km/h</ThemedText>
         </ThemedText>
         <ThemedText style={[styles.bold, styles.accuracy, accuracyStyle]}>
