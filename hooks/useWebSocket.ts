@@ -62,7 +62,8 @@ export const useWebSocket = (
     if (
       wsRef.current &&
       (wsRef.current.readyState === WebSocket.OPEN ||
-        wsRef.current.readyState === WebSocket.CONNECTING)
+        wsRef.current.readyState === WebSocket.CONNECTING ||
+        wsRef.current.readyState === WebSocket.CLOSING)
     ) {
       return;
     }
@@ -71,6 +72,10 @@ export const useWebSocket = (
       const ws = new WebSocket(url);
 
       ws.onopen = () => {
+        // 旧インスタンス由来の open は無視
+        if (wsRef.current && wsRef.current !== ws) {
+          return;
+        }
         setIsConnected(true);
         onOpenRef.current?.();
       };
@@ -112,6 +117,10 @@ export const useWebSocket = (
       };
 
       ws.onerror = (error) => {
+        // 旧インスタンス由来の error は無視
+        if (wsRef.current && wsRef.current !== ws) {
+          return;
+        }
         onErrorRef.current?.(error);
       };
 
