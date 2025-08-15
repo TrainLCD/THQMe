@@ -8,28 +8,28 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		369B682146DE165281CED1FC /* libPods-thqme.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D3B198FAD8EF7DB5CB46F1EB /* libPods-thqme.a */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		8E45C6409D6F35A4B0343166 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C1B8B462477537AC6F49BB38 /* PrivacyInfo.xcprivacy */; };
+		92B2C1A64E648A21D6BC2ABB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 1B8D46FAA7B513F0B58291FF /* PrivacyInfo.xcprivacy */; };
+		AEAB2131FAFB02224E828AEF /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8AB43242123F499C90EBAA5 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		D4BEA7B6281C9DD996678EC6 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9055029405CCE9B39CAB79E /* ExpoModulesProvider.swift */; };
+		C36ADDF9BFAE95536F030451 /* libPods-THQMe.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F6069068597F6155483386B6 /* libPods-THQMe.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		13B07F961A680F5B00A75B9A /* thqme.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = thqme.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = thqme/Images.xcassets; sourceTree = "<group>"; };
-		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = thqme/Info.plist; sourceTree = "<group>"; };
-		13EF628B1BC6EAAAFC669250 /* Pods-thqme.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-thqme.debug.xcconfig"; path = "Target Support Files/Pods-thqme/Pods-thqme.debug.xcconfig"; sourceTree = "<group>"; };
-		A9055029405CCE9B39CAB79E /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-thqme/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = thqme/SplashScreen.storyboard; sourceTree = "<group>"; };
+		13B07F961A680F5B00A75B9A /* THQMe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = THQMe.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = THQMe/Images.xcassets; sourceTree = "<group>"; };
+		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = THQMe/Info.plist; sourceTree = "<group>"; };
+		1B8D46FAA7B513F0B58291FF /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = THQMe/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		5DA46A6CA0E3261CBA722824 /* Pods-THQMe.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-THQMe.release.xcconfig"; path = "Target Support Files/Pods-THQMe/Pods-THQMe.release.xcconfig"; sourceTree = "<group>"; };
+		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = THQMe/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		C1B8B462477537AC6F49BB38 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = thqme/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		D3B198FAD8EF7DB5CB46F1EB /* libPods-thqme.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-thqme.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		E76336572455CAEB72EAF6B1 /* Pods-thqme.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-thqme.release.xcconfig"; path = "Target Support Files/Pods-thqme/Pods-thqme.release.xcconfig"; sourceTree = "<group>"; };
+		C4F2C7A2C10A0782520CEA51 /* Pods-THQMe.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-THQMe.debug.xcconfig"; path = "Target Support Files/Pods-THQMe/Pods-THQMe.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = thqme/AppDelegate.swift; sourceTree = "<group>"; };
-		F11748442D0722820044C1D9 /* thqme-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "thqme-Bridging-Header.h"; path = "thqme/thqme-Bridging-Header.h"; sourceTree = "<group>"; };
+		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = THQMe/AppDelegate.swift; sourceTree = "<group>"; };
+		F11748442D0722820044C1D9 /* THQMe-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "THQMe-Bridging-Header.h"; path = "THQMe/THQMe-Bridging-Header.h"; sourceTree = "<group>"; };
+		F6069068597F6155483386B6 /* libPods-THQMe.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-THQMe.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F8AB43242123F499C90EBAA5 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-THQMe/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,52 +37,52 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				369B682146DE165281CED1FC /* libPods-thqme.a in Frameworks */,
+				C36ADDF9BFAE95536F030451 /* libPods-THQMe.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0060B8577B3EFC3E2F849CCC /* Pods */ = {
+		0493AB58ACAFDFB6BB91A56D /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				13EF628B1BC6EAAAFC669250 /* Pods-thqme.debug.xcconfig */,
-				E76336572455CAEB72EAF6B1 /* Pods-thqme.release.xcconfig */,
+				8ECC2B6F70BF965E8806919C /* THQMe */,
 			);
-			name = Pods;
-			path = Pods;
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
-		13B07FAE1A68108700A75B9A /* thqme */ = {
+		13B07FAE1A68108700A75B9A /* THQMe */ = {
 			isa = PBXGroup;
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
-				F11748442D0722820044C1D9 /* thqme-Bridging-Header.h */,
+				F11748442D0722820044C1D9 /* THQMe-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				C1B8B462477537AC6F49BB38 /* PrivacyInfo.xcprivacy */,
+				1B8D46FAA7B513F0B58291FF /* PrivacyInfo.xcprivacy */,
 			);
-			name = thqme;
+			name = THQMe;
+			sourceTree = "<group>";
+		};
+		1B729DB5CC867CF964C32769 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				C4F2C7A2C10A0782520CEA51 /* Pods-THQMe.debug.xcconfig */,
+				5DA46A6CA0E3261CBA722824 /* Pods-THQMe.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				D3B198FAD8EF7DB5CB46F1EB /* libPods-thqme.a */,
+				F6069068597F6155483386B6 /* libPods-THQMe.a */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		6876D85552B36008CA9BD2CB /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				E6FB2BCAA2875771B94449B1 /* thqme */,
-			);
-			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -95,12 +95,12 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
-				13B07FAE1A68108700A75B9A /* thqme */,
+				13B07FAE1A68108700A75B9A /* THQMe */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				0060B8577B3EFC3E2F849CCC /* Pods */,
-				6876D85552B36008CA9BD2CB /* ExpoModulesProviders */,
+				1B729DB5CC867CF964C32769 /* Pods */,
+				0493AB58ACAFDFB6BB91A56D /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -110,9 +110,17 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* thqme.app */,
+				13B07F961A680F5B00A75B9A /* THQMe.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		8ECC2B6F70BF965E8806919C /* THQMe */ = {
+			isa = PBXGroup;
+			children = (
+				F8AB43242123F499C90EBAA5 /* ExpoModulesProvider.swift */,
+			);
+			name = THQMe;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -121,40 +129,32 @@
 				BB2F792C24A3F905000567C9 /* Expo.plist */,
 			);
 			name = Supporting;
-			path = thqme/Supporting;
-			sourceTree = "<group>";
-		};
-		E6FB2BCAA2875771B94449B1 /* thqme */ = {
-			isa = PBXGroup;
-			children = (
-				A9055029405CCE9B39CAB79E /* ExpoModulesProvider.swift */,
-			);
-			name = thqme;
+			path = THQMe/Supporting;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13B07F861A680F5B00A75B9A /* thqme */ = {
+		13B07F861A680F5B00A75B9A /* THQMe */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "thqme" */;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "THQMe" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				668CC81DBB41EF47BFBBB248 /* [Expo] Configure project */,
+				10765FAF0E3A895830582A49 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				BA4A2E48A6D0F88B6C479E3F /* [CP] Embed Pods Frameworks */,
+				0957F7F1E90C4357A422F01A /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = thqme;
-			productName = thqme;
-			productReference = 13B07F961A680F5B00A75B9A /* thqme.app */;
+			name = THQMe;
+			productName = THQMe;
+			productReference = 13B07F961A680F5B00A75B9A /* THQMe.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -170,7 +170,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "thqme" */;
+			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "THQMe" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -183,7 +183,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13B07F861A680F5B00A75B9A /* thqme */,
+				13B07F861A680F5B00A75B9A /* THQMe */,
 			);
 		};
 /* End PBXProject section */
@@ -196,7 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				8E45C6409D6F35A4B0343166 /* PrivacyInfo.xcprivacy in Resources */,
+				92B2C1A64E648A21D6BC2ABB /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -233,14 +233,32 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-thqme-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-THQMe-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		668CC81DBB41EF47BFBBB248 /* [Expo] Configure project */ = {
+		0957F7F1E90C4357A422F01A /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-THQMe/Pods-THQMe-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-THQMe/Pods-THQMe-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		10765FAF0E3A895830582A49 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -257,7 +275,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-thqme/expo-configure-project.sh\"\n";
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-THQMe/expo-configure-project.sh\"\n";
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -265,7 +283,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-thqme/Pods-thqme-resources.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-THQMe/Pods-THQMe-resources.sh",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
@@ -294,25 +312,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-thqme/Pods-thqme-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		BA4A2E48A6D0F88B6C479E3F /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-thqme/Pods-thqme-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-thqme/Pods-thqme-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-THQMe/Pods-THQMe-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -323,7 +323,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				D4BEA7B6281C9DD996678EC6 /* ExpoModulesProvider.swift in Sources */,
+				AEAB2131FAFB02224E828AEF /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -332,11 +332,11 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 13EF628B1BC6EAAAFC669250 /* Pods-thqme.debug.xcconfig */;
+			baseConfigurationReference = C4F2C7A2C10A0782520CEA51 /* Pods-THQMe.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = thqme/thqme.entitlements;
+				CODE_SIGN_ENTITLEMENTS = THQMe/THQMe.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_BITCODE = NO;
@@ -344,7 +344,7 @@
 					"$(inherited)",
 					"FB_SONARKIT_ENABLED=1",
 				);
-				INFOPLIST_FILE = thqme/Info.plist;
+				INFOPLIST_FILE = THQMe/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -358,8 +358,8 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.thq;
-				PRODUCT_NAME = thqme;
-				SWIFT_OBJC_BRIDGING_HEADER = "thqme/thqme-Bridging-Header.h";
+				PRODUCT_NAME = THQMe;
+				SWIFT_OBJC_BRIDGING_HEADER = "THQMe/THQMe-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -369,14 +369,14 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E76336572455CAEB72EAF6B1 /* Pods-thqme.release.xcconfig */;
+			baseConfigurationReference = 5DA46A6CA0E3261CBA722824 /* Pods-THQMe.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = thqme/thqme.entitlements;
+				CODE_SIGN_ENTITLEMENTS = THQMe/THQMe.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
-				INFOPLIST_FILE = thqme/Info.plist;
+				INFOPLIST_FILE = THQMe/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -390,8 +390,8 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.thq;
-				PRODUCT_NAME = thqme;
-				SWIFT_OBJC_BRIDGING_HEADER = "thqme/thqme-Bridging-Header.h";
+				PRODUCT_NAME = THQMe;
+				SWIFT_OBJC_BRIDGING_HEADER = "THQMe/THQMe-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -525,7 +525,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "thqme" */ = {
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "THQMe" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
@@ -534,7 +534,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "thqme" */ = {
+		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "THQMe" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,
