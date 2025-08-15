@@ -38,7 +38,7 @@ export function ConditionCard({ scoreLabel }: Props) {
 const styles = StyleSheet.create({
   container: {
     width: "100%",
-    maxHeight: 128,
+    height: 128,
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 32,
