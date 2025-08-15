@@ -38,7 +38,9 @@ export default function HomeScreen() {
   return (
     <DashboardScrollView>
       <ConditionCard scoreLabel={overallScore.label} />
-      <ThemedText style={styles.headingText}>Latest activities</ThemedText>
+      <ThemedText type="subtitle" style={styles.headingText}>
+        Latest activities
+      </ThemedText>
       <ActivityList data={activities} style={styles.activityList} />
     </DashboardScrollView>
   );
@@ -47,9 +49,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   headingText: {
     marginTop: 32,
-    fontSize: 21,
-    fontWeight: "600",
-    color: "#333",
   },
   activityList: {
     marginTop: 16,
