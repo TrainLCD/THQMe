@@ -1,5 +1,5 @@
 export default {
-  name: "thqme",
+  name: "THQMe",
   slug: "thqme",
   version: "1.0.0",
   orientation: "portrait",
