@@ -33,8 +33,8 @@ export default function HomeScreen() {
       byId.set(a.id, entry);
     }
     const clients = Array.from(byId.values());
-    const nowTs = activities[0]?.timestamp ?? Date.now();
-    return calcOverallScore(clients, nowTs);
+    const nowTs = Date.now();
+    return calcOverallScore(clients, nowTs, 0.15);
   }, [activities]);
 
   return (

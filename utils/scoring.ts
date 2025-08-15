@@ -23,13 +23,15 @@ function accScoreLinear(m?: number, speedKmh = 0): number {
     y = 35,
     r = 80;
   if (speedKmh >= 90) {
-    g += 10;
-    y += 10;
-    r += 10;
+    const boost = 10; // 90km/h以上は頭打ち
+    g += boost;
+    y += boost;
+    r += boost;
   } else if (speedKmh >= 50) {
-    g += 5;
-    y += 5;
-    r += 5;
+    const boost = 5 + ((speedKmh - 50) / 40) * 5; // 50→+5, 90手前→+10に近づく
+    g += boost;
+    y += boost;
+    r += boost;
   }
   if (m <= g) return 100;
   if (m <= y) return 100 - (m - g) * (40 / (y - g));
@@ -61,10 +63,25 @@ type Client = {
  * @param expectedHz 期待受信周波数[Hz]
  * @returns クライアントスコア（0〜100）
  */
-function scoreClient(c: Client, now: number, expectedHz = 1): number {
-  const W = 90_000;
-  const win = c.samples.filter((s) => now - s.ts <= W);
-  if (!win.length) return 0;
+function scoreClient(c: Client, now: number, expectedHz = 1): number | null {
+  // 基本窓 + 自動拡張（疎なときだけ広げる）
+  const BASE_W = 45_000; // 標準窓
+  const MIN_SAMPLES = 5; // 最低これだけは評価に使う
+  const MAX_W = 180_000; // 上限 3分
+
+  const countBase = c.samples.reduce((n, s) => {
+    const dt = now - s.ts;
+    return n + (dt >= 0 && dt <= BASE_W ? 1 : 0);
+  }, 0);
+  const scale = countBase > 0 ? Math.ceil(MIN_SAMPLES / countBase) : 4; // 0件ならとりあえず4倍
+  const W = Math.min(MAX_W, BASE_W * Math.max(1, scale));
+
+  const win = c.samples.filter((s) => {
+    const dt = now - s.ts;
+    return dt >= 0 && dt <= W; // 未来/古過ぎ除外
+  });
+
+  if (!win.length) return null;
 
   const accs = win
     .map((s) => accScoreLinear(s.accuracyM, s.speedKmh ?? 0))
@@ -78,10 +95,18 @@ function scoreClient(c: Client, now: number, expectedHz = 1): number {
   const age = Math.max(0, (now - lastTs) / 1000);
   const F = age <= 10 ? 100 : age >= 60 ? 0 : 100 * (1 - (age - 10) / 50);
 
-  const expected = Math.max(1, Math.round((W / 1000) * expectedHz));
-  const V = 100 * Math.min(1, win.length / expected);
+  // 可用性：実測Hz/期待Hzの比率 r にバッファを設けて減点を緩和
+  const Wsec = W / 1000;
+  const actualHz = win.length / Wsec; // 実測到着頻度
+  const r = expectedHz > 0 ? actualHz / expectedHz : 1; // 比率
+  // r>=0.8 なら満点、r<=0.3 で0点、間は線形（地理的疎化に強くする）
+  const V = Math.max(0, Math.min(1, (r - 0.3) / (0.8 - 0.3))) * 100;
 
-  return 0.85 * A + 0.1 * F + 0.05 * V;
+  const Veff = V * (F / 100); // 鮮度が悪い時ほど可用性の減点を効かせる
+
+  const S = 0.85 * A + 0.1 * F + 0.05 * Veff;
+
+  return S;
 }
 
 /**
@@ -105,8 +130,9 @@ export function calcOverallScore(
   now: number,
   expectedHz = 1
 ) {
-  const scores = clients
-    .map((c) => scoreClient(c, now, expectedHz))
+  const raw = clients.map((c) => scoreClient(c, now, expectedHz));
+  const scores = raw
+    .filter((s): s is number => typeof s === "number" && Number.isFinite(s))
     .sort((a, b) => a - b);
   const p50 = scores.length
     ? scores.length % 2 === 1
