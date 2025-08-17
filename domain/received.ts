@@ -15,7 +15,7 @@ const LocationUpdateDataSchema = z.object({
     accuracy: z.number().min(0).optional(),
     latitude: z.number().min(-90).max(90),
     longitude: z.number().min(-180).max(180),
-    speed: z.number().min(0).optional(),
+    speed: z.number().optional(),
   }),
   device: z.string(),
   id: z.string(),
