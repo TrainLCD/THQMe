@@ -88,7 +88,7 @@ export function ActivityCell({ item }: Props) {
 
   const speedKMH = useMemo(() => {
     const s = item.coords.speed;
-    if (s == null || Number.isNaN(s)) return null;
+    if (s == null || Number.isNaN(s) || s === -1) return null;
     return s * 3.6;
   }, [item.coords.speed]);
 
