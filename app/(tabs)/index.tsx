@@ -26,7 +26,12 @@ export default function HomeScreen() {
       entry.samples.push({
         ts: a.timestamp,
         accuracyM: a.coords.accuracy,
-        speedKmh: a.coords.speed != null ? a.coords.speed * 3.6 : undefined,
+        speedKmh:
+          a.coords.speed === -1
+            ? undefined
+            : a.coords.speed != null
+            ? a.coords.speed * 3.6
+            : undefined,
       });
       byId.set(a.id, entry);
     }
