@@ -12,10 +12,10 @@ const LogDataSchema = z.object({
 
 const LocationUpdateDataSchema = z.object({
   coords: z.object({
-    accuracy: z.number().min(0).optional(),
+    accuracy: z.number().nonnegative().optional(),
     latitude: z.number().min(-90).max(90),
     longitude: z.number().min(-180).max(180),
-    speed: z.number().min(0).optional(),
+    speed: z.number().nonnegative().optional(),
   }),
   device: z.string(),
   id: z.string(),
