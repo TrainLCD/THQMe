@@ -27,7 +27,7 @@ export default function TabLayout() {
         }),
       }}
     >
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="devices"
         options={{
           title: "Devices",
@@ -35,7 +35,7 @@ export default function TabLayout() {
             <IconSymbol size={28} name="smartphone" color={color} />
           ),
         }}
-      />
+      /> */}
       <Tabs.Screen
         name="index"
         options={{
@@ -45,7 +45,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="maps"
         options={{
           title: "Maps",
@@ -53,7 +53,7 @@ export default function TabLayout() {
             <IconSymbol size={28} name="map.fill" color={color} />
           ),
         }}
-      />
+      /> */}
     </Tabs>
   );
 }
