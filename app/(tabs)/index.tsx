@@ -44,7 +44,7 @@ export default function HomeScreen() {
     <DashboardScrollView>
       <ConditionCard scoreLabel={overallScore.label} />
       <ThemedText type="subtitle" style={styles.headingText}>
-        Latest activities
+        直近のアクティビティ
       </ThemedText>
       <ActivityList data={activities} style={styles.activityList} />
     </DashboardScrollView>

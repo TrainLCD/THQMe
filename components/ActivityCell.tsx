@@ -17,15 +17,15 @@ export function ActivityCell({ item }: Props) {
   const stateText = useMemo(() => {
     switch (item.state) {
       case MOVING_STATE.ARRIVED:
-        return "Arrived";
+        return "到着";
       case MOVING_STATE.APPROACHING:
-        return "Approaching";
+        return "接近中";
       case MOVING_STATE.MOVING:
-        return "Running";
+        return "走行中";
       case MOVING_STATE.PASSING:
-        return "Passing";
+        return "通過中";
       default:
-        return "Unknown";
+        return "不明";
     }
   }, [item.state]);
 
@@ -63,11 +63,11 @@ export function ActivityCell({ item }: Props) {
   const accuracyText = useMemo(() => {
     switch (accuracyKind) {
       case "high":
-        return "High Accuracy";
+        return "良好";
       case "moderate":
-        return "Moderate Accuracy";
+        return "普通";
       case "low":
-        return "Low Accuracy";
+        return "不良";
       default:
         return null;
     }
