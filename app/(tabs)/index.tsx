@@ -25,7 +25,7 @@ export default function HomeScreen() {
       const entry = byId.get(a.id) ?? { id: a.id, samples: [] };
       entry.samples.push({
         ts: a.timestamp,
-        accuracyM: a.coords.accuracy,
+        accuracyM: a.coords.accuracy ?? undefined,
         speedKmh:
           a.coords.speed === -1
             ? undefined
