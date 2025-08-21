@@ -7,6 +7,13 @@ type Props = {
   scoreLabel: "Good" | "Moderate" | "Poor" | "Unknown";
 };
 
+const JAPANESE_SCORE_LABEL = {
+  Good: "良好",
+  Moderate: "普通",
+  Poor: "不良",
+  Unknown: "不明",
+} as const;
+
 export function ConditionCard({ scoreLabel }: Props) {
   const colors = {
     Good: ["#34C759", "#386641"],
@@ -27,8 +34,10 @@ export function ConditionCard({ scoreLabel }: Props) {
       <View style={styles.content}>
         <IconSymbol name={icons[scoreLabel]} color="white" size={64} />
         <View style={styles.labels}>
-          <Text style={styles.overallScoreLabel}>Overall condition score</Text>
-          <Text style={styles.scoreLabel}>{scoreLabel}</Text>
+          <Text style={styles.overallScoreLabel}>コンディションスコア</Text>
+          <Text style={styles.scoreLabel}>
+            {JAPANESE_SCORE_LABEL[scoreLabel]}
+          </Text>
         </View>
       </View>
     </LinearGradient>
