@@ -9,8 +9,8 @@ type Props = {
 
 const JAPANESE_SCORE_LABEL = {
   Good: "良好",
-  Moderate: "普通",
-  Poor: "不良",
+  Moderate: "要注意",
+  Poor: "支障あり",
   Unknown: "不明",
 } as const;
 

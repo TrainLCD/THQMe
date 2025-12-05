@@ -65,9 +65,9 @@ type Client = {
  */
 function scoreClient(c: Client, now: number, expectedHz = 1): number | null {
   // 基本窓 + 自動拡張（疎なときだけ広げる）
-  const BASE_W = 45_000; // 標準窓
-  const MIN_SAMPLES = 5; // 最低これだけは評価に使う
-  const MAX_W = 180_000; // 上限 3分
+  const BASE_W = 30_000; // 標準窓
+  const MIN_SAMPLES = 3; // 少ない件数でも評価を開始
+  const MAX_W = 90_000; // 上限 90s で古い悪化サンプルの影響を早めに切る
 
   const countBase = c.samples.reduce((n, s) => {
     const dt = now - s.ts;
