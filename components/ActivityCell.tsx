@@ -65,9 +65,9 @@ export function ActivityCell({ item }: Props) {
       case "high":
         return "良好";
       case "moderate":
-        return "普通";
+        return "要注意";
       case "low":
-        return "不良";
+        return "支障あり";
       default:
         return null;
     }
@@ -93,7 +93,7 @@ export function ActivityCell({ item }: Props) {
   }, [item.coords.speed]);
 
   return (
-    <ThemedView key={item.id} style={styles.item}>
+    <ThemedView key={`${item.device}-${item.id}`} style={styles.item}>
       <StateIcon state={item.state} />
       <ThemedView style={styles.details}>
         <ThemedText style={styles.semibold}>
