@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export interface UseWebSocketOptions {
   url: string | undefined;
@@ -46,6 +46,14 @@ export const useWebSocket = (
   useEffect(() => void (onCloseRef.current = onClose), [onClose]);
   useEffect(() => void (onErrorRef.current = onError), [onError]);
 
+  const protocols = useMemo(
+    () => [
+      "thq",
+      `thq-auth-${process.env.EXPO_PUBLIC_WEBSOCKET_ENDPOINT_TOKEN}`,
+    ],
+    []
+  );
+
   const connect = useCallback(() => {
     if (!url) {
       return;
@@ -69,7 +77,7 @@ export const useWebSocket = (
     }
 
     try {
-      const ws = new WebSocket(url);
+      const ws = new WebSocket(url, protocols);
 
       ws.onopen = () => {
         // 旧インスタンス由来の open は無視
