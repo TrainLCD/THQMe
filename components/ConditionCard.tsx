@@ -34,7 +34,7 @@ export function ConditionCard({ scoreLabel }: Props) {
       <View style={styles.content}>
         <IconSymbol name={icons[scoreLabel]} color="white" size={64} />
         <View style={styles.labels}>
-          <Text style={styles.overallScoreLabel}>コンディションスコア</Text>
+          <Text style={styles.overallScoreLabel}>コンディション</Text>
           <Text style={styles.scoreLabel}>
             {JAPANESE_SCORE_LABEL[scoreLabel]}
           </Text>
