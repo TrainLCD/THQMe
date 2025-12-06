@@ -7,7 +7,6 @@ import { StyleSheet } from "react-native";
 import { StateIcon } from "./StateIcon";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
-import { IconSymbol } from "./ui/IconSymbol";
 
 type Props = {
   item: LocationUpdateData;
@@ -73,19 +72,6 @@ export function ActivityCell({ item }: Props) {
     }
   }, [accuracyKind]);
 
-  const scoreIconName = useMemo(() => {
-    switch (accuracyKind) {
-      case "high":
-        return "checkmark.circle.fill";
-      case "moderate":
-        return "minus.circle.fill";
-      case "low":
-        return "xmark.circle.fill";
-      default:
-        return null;
-    }
-  }, [accuracyKind]);
-
   const speedKMH = useMemo(() => {
     const s = item.coords.speed;
     if (s == null || Number.isNaN(s) || s === -1) return null;
@@ -111,15 +97,6 @@ export function ActivityCell({ item }: Props) {
           </ThemedText>{" "}
           {accuracyText}
         </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.conditionContainer}>
-        {scoreIconName && accuracyStyle && (
-          <IconSymbol
-            name={scoreIconName}
-            color={StyleSheet.flatten(accuracyStyle)?.color as string}
-            size={48}
-          />
-        )}
       </ThemedView>
     </ThemedView>
   );
