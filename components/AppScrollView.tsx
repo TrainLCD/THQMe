@@ -49,7 +49,6 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
   conditionCardContainer: {
-    flex: 1,
     shadowColor: "black",
     shadowOffset: {
       width: 0,
