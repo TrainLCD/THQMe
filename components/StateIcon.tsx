@@ -12,10 +12,10 @@ export function StateIcon({ state }: Props) {
       return (
         <View style={styles.container}>
           <IconSymbol
-            name="arrow.forward.to.line"
+            name="chevron.right.to.line"
             weight="bold"
-            color="white"
-            size={24}
+            color="#525252"
+            size={21}
           />
         </View>
       );
@@ -23,10 +23,10 @@ export function StateIcon({ state }: Props) {
       return (
         <View style={styles.container}>
           <IconSymbol
-            name="stop.circle"
+            name="stop.fill"
             weight="bold"
-            color="white"
-            size={24}
+            color="#525252"
+            size={21}
           />
         </View>
       );
@@ -34,10 +34,10 @@ export function StateIcon({ state }: Props) {
       return (
         <View style={styles.container}>
           <IconSymbol
-            name="arrow.forward"
+            name="chevron.right"
             weight="bold"
-            color="white"
-            size={24}
+            color="#525252"
+            size={21}
           />
         </View>
       );
@@ -45,10 +45,10 @@ export function StateIcon({ state }: Props) {
       return (
         <View style={styles.container}>
           <IconSymbol
-            name="arrow.right.circle.dotted"
+            name={`chevron.right.dotted.chevron.right`}
             weight="bold"
-            color="white"
-            size={32} // 視認性のために特別32を指定
+            color="#525252"
+            size={21}
           />
         </View>
       );
@@ -62,7 +62,8 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#00AC9A",
+    borderColor: "#525252",
+    borderWidth: 2,
     justifyContent: "center",
     alignItems: "center",
   },

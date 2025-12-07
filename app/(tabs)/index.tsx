@@ -1,7 +1,5 @@
 import { ActivityList } from "@/components/ActivityList";
-import DashboardScrollView from "@/components/AppScrollView";
-import { ConditionCard } from "@/components/ConditionCard";
-import { ThemedText } from "@/components/ThemedText";
+import AppScrollView from "@/components/AppScrollView";
 import { useListenActivities } from "@/hooks/useListenActivities";
 import { calcOverallScore } from "@/utils/scoring";
 import { useMemo } from "react";
@@ -41,20 +39,13 @@ export default function HomeScreen() {
   }, [activities]);
 
   return (
-    <DashboardScrollView>
-      <ConditionCard scoreLabel={overallScore.label} />
-      <ThemedText type="subtitle" style={styles.headingText}>
-        直近のアクティビティ
-      </ThemedText>
+    <AppScrollView scoreLabel={overallScore.label}>
       <ActivityList data={activities} style={styles.activityList} />
-    </DashboardScrollView>
+    </AppScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  headingText: {
-    marginTop: 32,
-  },
   activityList: {
     marginTop: 16,
   },
