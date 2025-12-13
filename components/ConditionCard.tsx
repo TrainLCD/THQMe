@@ -1,6 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { StyleSheet, Text, View } from "react-native";
-import { DotsOverlay } from "./DotsOverlay";
+import { ImageBackground, StyleSheet, Text, View } from "react-native";
 import { IconSymbol } from "./ui/IconSymbol";
 
 type Props = {
@@ -30,16 +29,24 @@ export function ConditionCard({ scoreLabel }: Props) {
 
   return (
     <LinearGradient colors={colors[scoreLabel]} style={styles.container}>
-      <DotsOverlay style={styles.dotsOverlay} />
-      <View style={styles.content}>
-        <IconSymbol name={icons[scoreLabel]} color="white" size={64} />
-        <View style={styles.labels}>
-          <Text style={styles.overallScoreLabel}>コンディション</Text>
-          <Text style={styles.scoreLabel}>
-            {JAPANESE_SCORE_LABEL[scoreLabel]}
-          </Text>
+      <ImageBackground
+        source={require("../assets/images/halftone.png")}
+        imageStyle={{
+          height: "100%",
+          marginTop: "25%",
+        }}
+        resizeMode="repeat"
+      >
+        <View style={styles.content}>
+          <IconSymbol name={icons[scoreLabel]} color="white" size={64} />
+          <View style={styles.labels}>
+            <Text style={styles.overallScoreLabel}>コンディション</Text>
+            <Text style={styles.scoreLabel}>
+              {JAPANESE_SCORE_LABEL[scoreLabel]}
+            </Text>
+          </View>
         </View>
-      </View>
+      </ImageBackground>
     </LinearGradient>
   );
 }
@@ -49,8 +56,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 128,
     borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 32,
     shadowColor: "black",
     shadowOffset: {
       width: 0,
@@ -60,14 +65,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  dotsOverlay: {
-    position: "absolute",
-    left: 0,
-    top: "-100%",
-    width: "100%",
-    height: "100%",
-  },
   content: {
+    paddingHorizontal: 16,
+    paddingVertical: 32,
     flexDirection: "row",
     alignItems: "center",
   },
