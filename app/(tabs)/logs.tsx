@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   Text,
   View,
@@ -8,14 +8,13 @@ import {
   Platform,
   Alert,
   ScrollView,
-  LayoutAnimation,
-  UIManager,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import Animated, {
   useAnimatedStyle,
   withTiming,
   useSharedValue,
+  Easing,
 } from "react-native-reanimated";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -24,11 +23,6 @@ import { ConnectionStatusBadge } from "@/components/connection-status";
 import { useLocation } from "@/lib/location-store";
 import type { LogData, LogType, LogLevel } from "@/lib/types/location";
 import { cn } from "@/lib/utils";
-
-// AndroidでLayoutAnimationを有効化
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 // フィルターオプションの定義
 const LOG_TYPES: { value: LogType; label: string }[] = [
@@ -44,21 +38,8 @@ const LOG_LEVELS: { value: LogLevel; label: string }[] = [
   { value: "error", label: "ERROR" },
 ];
 
-// カスタムアニメーション設定
-const accordionAnimation = {
-  duration: 250,
-  create: {
-    type: LayoutAnimation.Types.easeInEaseOut,
-    property: LayoutAnimation.Properties.opacity,
-  },
-  update: {
-    type: LayoutAnimation.Types.easeInEaseOut,
-  },
-  delete: {
-    type: LayoutAnimation.Types.easeInEaseOut,
-    property: LayoutAnimation.Properties.opacity,
-  },
-};
+// アコーディオンコンテンツの高さ（デバイスフィルターなしの場合）
+const ACCORDION_CONTENT_HEIGHT = 180;
 
 export default function LogsScreen() {
   const { state, clearUpdates } = useLocation();
@@ -70,11 +51,22 @@ export default function LogsScreen() {
 
   // アニメーション用の共有値
   const rotateValue = useSharedValue(0);
+  const heightValue = useSharedValue(0);
+  const opacityValue = useSharedValue(0);
 
   // 矢印の回転アニメーション
   const arrowStyle = useAnimatedStyle(() => {
     return {
       transform: [{ rotate: `${rotateValue.value}deg` }],
+    };
+  });
+
+  // コンテンツの高さアニメーション
+  const contentStyle = useAnimatedStyle(() => {
+    return {
+      height: heightValue.value,
+      opacity: opacityValue.value,
+      overflow: "hidden" as const,
     };
   });
 
@@ -88,6 +80,9 @@ export default function LogsScreen() {
     });
     return Array.from(deviceSet).sort();
   }, [state.logs]);
+
+  // デバイスフィルターがある場合は高さを増やす
+  const contentHeight = logDeviceIds.length > 0 ? ACCORDION_CONTENT_HEIGHT + 60 : ACCORDION_CONTENT_HEIGHT;
 
   // フィルタリングされたログ
   const filteredLogs = useMemo(() => {
@@ -202,14 +197,20 @@ export default function LogsScreen() {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    // LayoutAnimationを設定してから状態を変更
-    LayoutAnimation.configureNext(accordionAnimation);
-    setIsFilterExpanded((prev) => {
-      const newValue = !prev;
-      rotateValue.value = withTiming(newValue ? 180 : 0, { duration: 250 });
-      return newValue;
-    });
-  }, [rotateValue]);
+    
+    const newValue = !isFilterExpanded;
+    setIsFilterExpanded(newValue);
+    
+    // アニメーション設定
+    const animConfig = {
+      duration: 250,
+      easing: Easing.bezier(0.4, 0, 0.2, 1),
+    };
+    
+    rotateValue.value = withTiming(newValue ? 180 : 0, animConfig);
+    heightValue.value = withTiming(newValue ? contentHeight : 0, animConfig);
+    opacityValue.value = withTiming(newValue ? 1 : 0, { duration: newValue ? 250 : 150 });
+  }, [isFilterExpanded, rotateValue, heightValue, opacityValue, contentHeight]);
 
   const renderItem = useCallback(
     ({ item }: { item: LogData }) => (
@@ -258,8 +259,8 @@ export default function LogsScreen() {
             </View>
           </TouchableOpacity>
 
-          {/* Accordion Content */}
-          {isFilterExpanded && (
+          {/* Accordion Content with Animation */}
+          <Animated.View style={contentStyle}>
             <View className="px-4 pb-4 border-t border-border">
               {/* Type Filter */}
               <View className="mt-3">
@@ -447,7 +448,7 @@ export default function LogsScreen() {
                 </View>
               )}
             </View>
-          )}
+          </Animated.View>
         </View>
 
         {/* Count info */}
@@ -475,13 +476,13 @@ export default function LogsScreen() {
       logDeviceIds,
       filteredLogs.length,
       hasActiveFilter,
-      isFilterExpanded,
       handleClearData,
       handleTypeSelect,
       handleLevelSelect,
       handleDeviceSelect,
       toggleFilter,
       arrowStyle,
+      contentStyle,
     ]
   );
 
