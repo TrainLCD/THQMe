@@ -10,6 +10,11 @@ import {
   ScrollView,
 } from "react-native";
 import * as Haptics from "expo-haptics";
+import Animated, {
+  useAnimatedStyle,
+  withTiming,
+  useSharedValue,
+} from "react-native-reanimated";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { LogCard } from "@/components/log-card";
@@ -39,6 +44,17 @@ export default function LogsScreen() {
   const [selectedType, setSelectedType] = useState<LogType | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<LogLevel | null>(null);
   const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
+  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+
+  // アニメーション用の共有値
+  const rotateValue = useSharedValue(0);
+
+  // 矢印の回転アニメーション
+  const arrowStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotate: `${rotateValue.value}deg` }],
+    };
+  });
 
   // ログからユニークなデバイスIDを抽出
   const logDeviceIds = useMemo(() => {
@@ -69,6 +85,9 @@ export default function LogsScreen() {
       return true;
     });
   }, [state.logs, selectedType, selectedLevel, selectedDevice]);
+
+  // フィルターが適用されているかどうか
+  const hasActiveFilter = selectedType || selectedLevel || selectedDevice;
 
   const handleClearData = useCallback(() => {
     if (Platform.OS === "web") {
@@ -113,6 +132,17 @@ export default function LogsScreen() {
     []
   );
 
+  const toggleFilter = useCallback(() => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setIsFilterExpanded((prev) => {
+      const newValue = !prev;
+      rotateValue.value = withTiming(newValue ? 180 : 0, { duration: 200 });
+      return newValue;
+    });
+  }, [rotateValue]);
+
   const renderItem = useCallback(
     ({ item }: { item: LogData }) => (
       <View className="mb-3">
@@ -135,148 +165,179 @@ export default function LogsScreen() {
           <ConnectionStatusBadge status={state.connectionStatus} />
         </View>
 
-        {/* Type Filter */}
-        <View className="mb-3">
-          <Text className="text-sm text-muted mb-2">タイプ</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterScrollContent}
+        {/* Filter Accordion */}
+        <View className="mb-4 bg-surface rounded-xl border border-border overflow-hidden">
+          {/* Accordion Header */}
+          <TouchableOpacity
+            onPress={toggleFilter}
+            activeOpacity={0.7}
+            style={styles.accordionHeader}
           >
-            {LOG_TYPES.map((option) => (
-              <TouchableOpacity
-                key={option.label}
-                onPress={() => handleFilterSelect("type", option.value)}
-                activeOpacity={0.7}
-                style={styles.filterButton}
-              >
-                <View
-                  className={cn(
-                    "px-3 py-2 rounded-full border",
-                    selectedType === option.value
-                      ? "bg-primary border-primary"
-                      : "bg-surface border-border"
-                  )}
-                >
-                  <Text
-                    className={cn(
-                      "text-sm font-medium",
-                      selectedType === option.value ? "text-white" : "text-foreground"
-                    )}
-                  >
-                    {option.label}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Level Filter */}
-        <View className="mb-3">
-          <Text className="text-sm text-muted mb-2">レベル</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterScrollContent}
-          >
-            {LOG_LEVELS.map((option) => (
-              <TouchableOpacity
-                key={option.label}
-                onPress={() => handleFilterSelect("level", option.value)}
-                activeOpacity={0.7}
-                style={styles.filterButton}
-              >
-                <View
-                  className={cn(
-                    "px-3 py-2 rounded-full border",
-                    selectedLevel === option.value
-                      ? "bg-primary border-primary"
-                      : "bg-surface border-border"
-                  )}
-                >
-                  <Text
-                    className={cn(
-                      "text-sm font-medium",
-                      selectedLevel === option.value ? "text-white" : "text-foreground"
-                    )}
-                  >
-                    {option.label}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Device Filter */}
-        {logDeviceIds.length > 0 && (
-          <View className="mb-3">
-            <Text className="text-sm text-muted mb-2">デバイス</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.filterScrollContent}
-            >
-              <TouchableOpacity
-                onPress={() => handleFilterSelect("device", null)}
-                activeOpacity={0.7}
-                style={styles.filterButton}
-              >
-                <View
-                  className={cn(
-                    "px-3 py-2 rounded-full border",
-                    !selectedDevice
-                      ? "bg-primary border-primary"
-                      : "bg-surface border-border"
-                  )}
-                >
-                  <Text
-                    className={cn(
-                      "text-sm font-medium",
-                      !selectedDevice ? "text-white" : "text-foreground"
-                    )}
-                  >
-                    すべて
-                  </Text>
-                </View>
-              </TouchableOpacity>
-              {logDeviceIds.map((device) => (
-                <TouchableOpacity
-                  key={device}
-                  onPress={() => handleFilterSelect("device", device)}
-                  activeOpacity={0.7}
-                  style={styles.filterButton}
-                >
-                  <View
-                    className={cn(
-                      "px-3 py-2 rounded-full border",
-                      selectedDevice === device
-                        ? "bg-primary border-primary"
-                        : "bg-surface border-border"
-                    )}
-                  >
-                    <Text
-                      className={cn(
-                        "text-sm font-medium",
-                        selectedDevice === device ? "text-white" : "text-foreground"
-                      )}
-                      numberOfLines={1}
-                    >
-                      {device}
-                    </Text>
+            <View className="flex-row items-center justify-between px-4 py-3">
+              <View className="flex-row items-center">
+                <Text className="text-base font-medium text-foreground">
+                  フィルター
+                </Text>
+                {hasActiveFilter && (
+                  <View className="ml-2 bg-primary px-2 py-0.5 rounded-full">
+                    <Text className="text-xs text-white font-medium">適用中</Text>
                   </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        )}
+                )}
+              </View>
+              <Animated.Text style={[styles.arrowIcon, arrowStyle]}>
+                ▼
+              </Animated.Text>
+            </View>
+          </TouchableOpacity>
+
+          {/* Accordion Content */}
+          {isFilterExpanded && (
+            <View className="px-4 pb-4 border-t border-border">
+              {/* Type Filter */}
+              <View className="mt-3">
+                <Text className="text-sm text-muted mb-2">タイプ</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.filterScrollContent}
+                >
+                  {LOG_TYPES.map((option) => (
+                    <TouchableOpacity
+                      key={option.label}
+                      onPress={() => handleFilterSelect("type", option.value)}
+                      activeOpacity={0.7}
+                      style={styles.filterButton}
+                    >
+                      <View
+                        className={cn(
+                          "px-3 py-2 rounded-full border",
+                          selectedType === option.value
+                            ? "bg-primary border-primary"
+                            : "bg-background border-border"
+                        )}
+                      >
+                        <Text
+                          className={cn(
+                            "text-sm font-medium",
+                            selectedType === option.value ? "text-white" : "text-foreground"
+                          )}
+                        >
+                          {option.label}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              {/* Level Filter */}
+              <View className="mt-3">
+                <Text className="text-sm text-muted mb-2">レベル</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.filterScrollContent}
+                >
+                  {LOG_LEVELS.map((option) => (
+                    <TouchableOpacity
+                      key={option.label}
+                      onPress={() => handleFilterSelect("level", option.value)}
+                      activeOpacity={0.7}
+                      style={styles.filterButton}
+                    >
+                      <View
+                        className={cn(
+                          "px-3 py-2 rounded-full border",
+                          selectedLevel === option.value
+                            ? "bg-primary border-primary"
+                            : "bg-background border-border"
+                        )}
+                      >
+                        <Text
+                          className={cn(
+                            "text-sm font-medium",
+                            selectedLevel === option.value ? "text-white" : "text-foreground"
+                          )}
+                        >
+                          {option.label}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              {/* Device Filter */}
+              {logDeviceIds.length > 0 && (
+                <View className="mt-3">
+                  <Text className="text-sm text-muted mb-2">デバイス</Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.filterScrollContent}
+                  >
+                    <TouchableOpacity
+                      onPress={() => handleFilterSelect("device", null)}
+                      activeOpacity={0.7}
+                      style={styles.filterButton}
+                    >
+                      <View
+                        className={cn(
+                          "px-3 py-2 rounded-full border",
+                          !selectedDevice
+                            ? "bg-primary border-primary"
+                            : "bg-background border-border"
+                        )}
+                      >
+                        <Text
+                          className={cn(
+                            "text-sm font-medium",
+                            !selectedDevice ? "text-white" : "text-foreground"
+                          )}
+                        >
+                          すべて
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                    {logDeviceIds.map((device) => (
+                      <TouchableOpacity
+                        key={device}
+                        onPress={() => handleFilterSelect("device", device)}
+                        activeOpacity={0.7}
+                        style={styles.filterButton}
+                      >
+                        <View
+                          className={cn(
+                            "px-3 py-2 rounded-full border",
+                            selectedDevice === device
+                              ? "bg-primary border-primary"
+                              : "bg-background border-border"
+                          )}
+                        >
+                          <Text
+                            className={cn(
+                              "text-sm font-medium",
+                              selectedDevice === device ? "text-white" : "text-foreground"
+                            )}
+                            numberOfLines={1}
+                          >
+                            {device}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+          )}
+        </View>
 
         {/* Count info */}
         <View className="flex-row justify-between items-center">
           <Text className="text-sm text-muted">
             {filteredLogs.length} 件のログ
-            {(selectedType || selectedLevel || selectedDevice) && (
+            {hasActiveFilter && (
               <Text className="text-muted"> (全{state.logs.length}件)</Text>
             )}
           </Text>
@@ -296,8 +357,12 @@ export default function LogsScreen() {
       selectedDevice,
       logDeviceIds,
       filteredLogs.length,
+      hasActiveFilter,
+      isFilterExpanded,
       handleClearData,
       handleFilterSelect,
+      toggleFilter,
+      arrowStyle,
     ]
   );
 
@@ -306,18 +371,18 @@ export default function LogsScreen() {
       <View className="flex-1 items-center justify-center py-20">
         <Text className="text-6xl mb-4">📝</Text>
         <Text className="text-lg font-semibold text-foreground mb-2">
-          {selectedType || selectedLevel || selectedDevice
+          {hasActiveFilter
             ? "条件に一致するログがありません"
             : "ログがありません"}
         </Text>
         <Text className="text-sm text-muted text-center px-8">
-          {selectedType || selectedLevel || selectedDevice
+          {hasActiveFilter
             ? "フィルター条件を変更してください"
             : "WebSocketに接続してログデータを受信してください"}
         </Text>
       </View>
     ),
-    [selectedType, selectedLevel, selectedDevice]
+    [hasActiveFilter]
   );
 
   return (
@@ -345,5 +410,12 @@ const styles = StyleSheet.create({
   },
   filterButton: {
     marginBottom: 4,
+  },
+  accordionHeader: {
+    // TouchableOpacity styles
+  },
+  arrowIcon: {
+    fontSize: 12,
+    color: "#687076",
   },
 });
