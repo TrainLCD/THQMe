@@ -25,3 +25,4 @@
 - [x] アプリ起動時に自動でWebSocket接続を開始
 - [x] 新しいアイコン画像に変更（正方形版）
 - [x] MovingStateをarrived/approaching/passing/movingの4つの状態に変更
+- [x] 位置情報カードに日付表示（YYYY/MM/DD）を追加

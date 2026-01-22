@@ -22,6 +22,14 @@ function formatCoordinate(value: number, type: "lat" | "lng"): string {
   return `${abs.toFixed(6)}° ${direction}`;
 }
 
+function formatDate(timestamp: number): string {
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}/${month}/${day}`;
+}
+
 function formatTimestamp(timestamp: number): string {
   const date = new Date(timestamp);
   return date.toLocaleTimeString("ja-JP", {
@@ -52,12 +60,12 @@ export function LocationCard({ update }: LocationCardProps) {
 
   return (
     <View className="bg-surface rounded-xl p-4 border border-border">
-      {/* Header: Time and Device */}
-      <View className="flex-row justify-between items-center mb-3">
+      {/* Header: Date and Device */}
+      <View className="flex-row justify-between items-center mb-1">
         <View className="flex-row items-center">
-          <Text className="text-muted text-sm mr-2">🕐</Text>
+          <Text className="text-muted text-sm mr-2">📅</Text>
           <Text className="text-foreground font-semibold">
-            {formatTimestamp(update.timestamp)}
+            {formatDate(update.timestamp)}
           </Text>
         </View>
         <View className="flex-row items-center">
@@ -66,6 +74,14 @@ export function LocationCard({ update }: LocationCardProps) {
             {update.device}
           </Text>
         </View>
+      </View>
+
+      {/* Time */}
+      <View className="flex-row items-center mb-3">
+        <Text className="text-muted text-sm mr-2">🕐</Text>
+        <Text className="text-foreground font-semibold">
+          {formatTimestamp(update.timestamp)}
+        </Text>
       </View>
 
       {/* Coordinates */}
