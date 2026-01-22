@@ -81,8 +81,10 @@ export default function TimelineScreen() {
       // テキスト検索フィルター
       if (query) {
         const device = update.device?.toLowerCase() || "";
-        const state = update.state?.toLowerCase() || "";
-        if (!device.includes(query) && !state.includes(query)) {
+        const stateStr = update.state?.toLowerCase() || "";
+        const lat = update.coords?.latitude?.toString() || "";
+        const lng = update.coords?.longitude?.toString() || "";
+        if (!device.includes(query) && !stateStr.includes(query) && !lat.includes(query) && !lng.includes(query)) {
           return false;
         }
       }
@@ -322,8 +324,7 @@ export default function TimelineScreen() {
               </View>
 
               {/* Device Filter */}
-              {state.deviceIds.length > 0 && (
-                <View className="mt-3">
+              <View className="mt-3">
                   <Text className="text-sm text-muted mb-2">デバイス</Text>
                   <ScrollView
                     horizontal
@@ -354,36 +355,39 @@ export default function TimelineScreen() {
                         </Text>
                       </View>
                     </TouchableOpacity>
-                    {state.deviceIds.map((device) => (
-                      <TouchableOpacity
-                        key={device}
-                        onPress={() => handleDeviceSelect(device)}
-                        activeOpacity={0.7}
-                        style={styles.filterButton}
-                      >
-                        <View
-                          className={cn(
-                            "px-3 py-2 rounded-full border",
-                            selectedDevices.has(device)
-                              ? "bg-primary border-primary"
-                              : "bg-background border-border"
-                          )}
+                    {state.deviceIds.length > 0 ? (
+                      state.deviceIds.map((device) => (
+                        <TouchableOpacity
+                          key={device}
+                          onPress={() => handleDeviceSelect(device)}
+                          activeOpacity={0.7}
+                          style={styles.filterButton}
                         >
-                          <Text
+                          <View
                             className={cn(
-                              "text-sm font-medium",
-                              selectedDevices.has(device) ? "text-white" : "text-foreground"
+                              "px-3 py-2 rounded-full border",
+                              selectedDevices.has(device)
+                                ? "bg-primary border-primary"
+                                : "bg-background border-border"
                             )}
-                            numberOfLines={1}
                           >
-                            {device}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    ))}
+                            <Text
+                              className={cn(
+                                "text-sm font-medium",
+                                selectedDevices.has(device) ? "text-white" : "text-foreground"
+                              )}
+                              numberOfLines={1}
+                            >
+                              {device}
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+                      ))
+                    ) : (
+                      <Text className="text-sm text-muted py-2">接続待ち...</Text>
+                    )}
                   </ScrollView>
                 </View>
-              )}
             </View>
           </Animated.View>
         </View>
