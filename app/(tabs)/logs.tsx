@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Text,
   View,
@@ -8,6 +8,8 @@ import {
   Platform,
   Alert,
   ScrollView,
+  LayoutAnimation,
+  UIManager,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -23,6 +25,11 @@ import { useLocation } from "@/lib/location-store";
 import type { LogData, LogType, LogLevel } from "@/lib/types/location";
 import { cn } from "@/lib/utils";
 
+// AndroidでLayoutAnimationを有効化
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 // フィルターオプションの定義
 const LOG_TYPES: { value: LogType; label: string }[] = [
   { value: "app", label: "APP" },
@@ -36,6 +43,22 @@ const LOG_LEVELS: { value: LogLevel; label: string }[] = [
   { value: "warn", label: "WARN" },
   { value: "error", label: "ERROR" },
 ];
+
+// カスタムアニメーション設定
+const accordionAnimation = {
+  duration: 250,
+  create: {
+    type: LayoutAnimation.Types.easeInEaseOut,
+    property: LayoutAnimation.Properties.opacity,
+  },
+  update: {
+    type: LayoutAnimation.Types.easeInEaseOut,
+  },
+  delete: {
+    type: LayoutAnimation.Types.easeInEaseOut,
+    property: LayoutAnimation.Properties.opacity,
+  },
+};
 
 export default function LogsScreen() {
   const { state, clearUpdates } = useLocation();
@@ -179,9 +202,11 @@ export default function LogsScreen() {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+    // LayoutAnimationを設定してから状態を変更
+    LayoutAnimation.configureNext(accordionAnimation);
     setIsFilterExpanded((prev) => {
       const newValue = !prev;
-      rotateValue.value = withTiming(newValue ? 180 : 0, { duration: 200 });
+      rotateValue.value = withTiming(newValue ? 180 : 0, { duration: 250 });
       return newValue;
     });
   }, [rotateValue]);
@@ -216,7 +241,7 @@ export default function LogsScreen() {
             activeOpacity={0.7}
             style={styles.accordionHeader}
           >
-            <View className="flex-row items-center justify-between px-4 py-4">
+            <View className="flex-1 flex-row items-center justify-between px-4">
               <View className="flex-row items-center">
                 <Text className="text-base font-medium text-foreground">
                   フィルター
@@ -507,6 +532,7 @@ const styles = StyleSheet.create({
   },
   accordionHeader: {
     minHeight: 56,
+    justifyContent: "center",
   },
   arrowIcon: {
     fontSize: 12,
