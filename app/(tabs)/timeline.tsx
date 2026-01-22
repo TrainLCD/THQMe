@@ -33,8 +33,8 @@ const MOVING_STATES: { value: MovingState; label: string }[] = [
 ];
 
 // アコーディオンコンテンツの高さ
-const ACCORDION_CONTENT_HEIGHT_BASE = 70; // 状態フィルターのみ
-const ACCORDION_CONTENT_HEIGHT_WITH_DEVICE = 140; // 状態 + デバイスフィルター
+const ACCORDION_CONTENT_HEIGHT_BASE = 90; // 状態フィルターのみ
+const ACCORDION_CONTENT_HEIGHT_WITH_DEVICE = 170; // 状態 + デバイスフィルター
 
 export default function TimelineScreen() {
   const { state, clearUpdates } = useLocation();

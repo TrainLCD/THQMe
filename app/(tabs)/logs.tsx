@@ -39,7 +39,7 @@ const LOG_LEVELS: { value: LogLevel; label: string }[] = [
 ];
 
 // アコーディオンコンテンツの高さ（デバイスフィルターなしの場合）
-const ACCORDION_CONTENT_HEIGHT = 180;
+const ACCORDION_CONTENT_HEIGHT = 200;
 
 export default function LogsScreen() {
   const { state, clearUpdates } = useLocation();
@@ -82,7 +82,7 @@ export default function LogsScreen() {
   }, [state.logs]);
 
   // デバイスフィルターがある場合は高さを増やす
-  const contentHeight = logDeviceIds.length > 0 ? ACCORDION_CONTENT_HEIGHT + 60 : ACCORDION_CONTENT_HEIGHT;
+  const contentHeight = logDeviceIds.length > 0 ? ACCORDION_CONTENT_HEIGHT + 70 : ACCORDION_CONTENT_HEIGHT;
 
   // フィルタリングされたログ
   const filteredLogs = useMemo(() => {
