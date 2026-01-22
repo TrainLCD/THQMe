@@ -81,14 +81,14 @@ export default function HomeScreen() {
             {/* Row 2: 位置情報更新 / 受信ログ */}
             <View className="flex-row justify-between mb-3 pt-3 border-t border-border">
               <View className="flex-1 items-center">
-                <Text className="text-3xl font-bold text-success">
+                <Text className="text-3xl font-bold text-primary">
                   {state.updates.length}
                 </Text>
                 <Text className="text-sm text-muted mt-1">位置情報更新</Text>
               </View>
               <View className="w-px bg-border" />
               <View className="flex-1 items-center">
-                <Text className="text-3xl font-bold text-warning">
+                <Text className="text-3xl font-bold text-primary">
                   {state.logs.length}
                 </Text>
                 <Text className="text-sm text-muted mt-1">受信ログ</Text>
