@@ -24,3 +24,4 @@
 - [x] 接続ステータスからURLとボタンを削除
 - [x] アプリ起動時に自動でWebSocket接続を開始
 - [x] 新しいアイコン画像に変更（正方形版）
+- [x] MovingStateをarrived/approaching/passing/movingの4つの状態に変更

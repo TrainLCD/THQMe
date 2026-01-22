@@ -1,7 +1,11 @@
 /**
  * 移動状態を表す型
+ * - arrived: 到着
+ * - approaching: 接近中
+ * - passing: 通過中
+ * - moving: 移動中
  */
-export type MovingState = "moving" | "stationary" | "unknown";
+export type MovingState = "arrived" | "approaching" | "passing" | "moving";
 
 /**
  * 座標情報

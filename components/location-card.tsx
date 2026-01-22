@@ -7,9 +7,10 @@ interface LocationCardProps {
 }
 
 const stateConfig: Record<MovingState, { label: string; bgClass: string; textClass: string }> = {
-  moving: { label: "移動中", bgClass: "bg-success/20", textClass: "text-success" },
-  stationary: { label: "停止中", bgClass: "bg-primary/20", textClass: "text-primary" },
-  unknown: { label: "不明", bgClass: "bg-warning/20", textClass: "text-warning" },
+  arrived: { label: "到着", bgClass: "bg-success/20", textClass: "text-success" },
+  approaching: { label: "接近中", bgClass: "bg-warning/20", textClass: "text-warning" },
+  passing: { label: "通過中", bgClass: "bg-primary/20", textClass: "text-primary" },
+  moving: { label: "移動中", bgClass: "bg-muted/20", textClass: "text-muted" },
 };
 
 // 未知のstate値に対するフォールバック
