@@ -50,6 +50,7 @@ function locationReducer(state: LocationState, action: LocationAction): Location
       return {
         ...state,
         logs: newLogs,
+        messageCount: state.messageCount + 1,
       };
     }
     case "SET_CONNECTION_STATUS":
