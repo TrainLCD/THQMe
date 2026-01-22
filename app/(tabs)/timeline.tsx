@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
-  RefreshControl,
   Alert,
 } from "react-native";
 import * as Haptics from "expo-haptics";
@@ -21,7 +20,6 @@ import { cn } from "@/lib/utils";
 export default function TimelineScreen() {
   const { state, clearUpdates } = useLocation();
   const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
 
   // Filter updates by selected device
   const filteredUpdates = useMemo(() => {
@@ -52,12 +50,6 @@ export default function TimelineScreen() {
       );
     }
   }, [clearUpdates]);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    handleClearData();
-    setRefreshing(false);
-  }, [handleClearData]);
 
   const handleDeviceSelect = (device: string | null) => {
     if (Platform.OS !== "web") {
@@ -193,9 +185,6 @@ export default function TimelineScreen() {
         ListEmptyComponent={ListEmpty}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
       />
     </ScreenContainer>
   );

@@ -26,3 +26,4 @@
 - [x] 新しいアイコン画像に変更（正方形版）
 - [x] MovingStateをarrived/approaching/passing/movingの4つの状態に変更
 - [x] 位置情報カードに日付表示（YYYY/MM/DD）を追加
+- [x] タイムライン画面からPull to Refresh機能を削除
