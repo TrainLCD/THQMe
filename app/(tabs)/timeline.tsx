@@ -12,9 +12,8 @@ import {
 import * as Haptics from "expo-haptics";
 import Animated, {
   useAnimatedStyle,
-  withTiming,
+  withSpring,
   useSharedValue,
-  Easing,
 } from "react-native-reanimated";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -161,15 +160,16 @@ export default function TimelineScreen() {
     const newValue = !isFilterExpanded;
     setIsFilterExpanded(newValue);
 
-    // アニメーション設定
-    const animConfig = {
-      duration: 250,
-      easing: Easing.bezier(0.4, 0, 0.2, 1),
+    // スプリングアニメーション設定（ネイティブスレッドで実行）
+    const springConfig = {
+      damping: 20,
+      stiffness: 300,
+      mass: 0.5,
     };
 
-    rotateValue.value = withTiming(newValue ? 180 : 0, animConfig);
-    heightValue.value = withTiming(newValue ? contentHeight : 0, animConfig);
-    opacityValue.value = withTiming(newValue ? 1 : 0, { duration: newValue ? 250 : 150 });
+    rotateValue.value = withSpring(newValue ? 180 : 0, springConfig);
+    heightValue.value = withSpring(newValue ? contentHeight : 0, springConfig);
+    opacityValue.value = withSpring(newValue ? 1 : 0, { damping: 25, stiffness: 400 });
   }, [isFilterExpanded, rotateValue, heightValue, opacityValue, contentHeight]);
 
   const renderItem = useCallback(
