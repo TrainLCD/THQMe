@@ -1,9 +1,7 @@
-import { useState } from "react";
 import {
   ScrollView,
   Text,
   View,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   Platform,
@@ -15,8 +13,7 @@ import { ConnectionStatusBadge } from "@/components/connection-status";
 import { useLocation } from "@/lib/location-store";
 
 export default function HomeScreen() {
-  const { state, connect, disconnect, setWsUrl } = useLocation();
-  const [inputUrl, setInputUrl] = useState(state.wsUrl);
+  const { state, connect, disconnect } = useLocation();
 
   const handleConnect = () => {
     if (Platform.OS !== "web") {
@@ -25,8 +22,7 @@ export default function HomeScreen() {
     if (state.connectionStatus === "connected" || state.connectionStatus === "connecting") {
       disconnect();
     } else {
-      setWsUrl(inputUrl);
-      connect(inputUrl);
+      connect();
     }
   };
 
@@ -51,7 +47,7 @@ export default function HomeScreen() {
           <View className="items-center gap-2">
             <Text className="text-3xl font-bold text-foreground">Location Tracker</Text>
             <Text className="text-base text-muted text-center">
-              WebSocket経由で位置情報をリアルタイム受信
+              TrainLCD位置情報をリアルタイム受信
             </Text>
           </View>
 
@@ -62,21 +58,12 @@ export default function HomeScreen() {
               <ConnectionStatusBadge status={state.connectionStatus} />
             </View>
 
-            {/* URL Input */}
-            <View className="mb-4">
-              <Text className="text-sm text-muted mb-2">WebSocket URL</Text>
-              <TextInput
-                className="bg-background border border-border rounded-lg px-4 py-3 text-foreground"
-                placeholder="ws://example.com/location"
-                placeholderTextColor="#64748B"
-                value={inputUrl}
-                onChangeText={setInputUrl}
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="url"
-                returnKeyType="done"
-                editable={!isConnected}
-              />
+            {/* Server Info */}
+            <View className="mb-4 p-3 bg-background rounded-lg">
+              <Text className="text-xs text-muted mb-1">接続先</Text>
+              <Text className="text-sm text-foreground" numberOfLines={1}>
+                analytics-internal.trainlcd.app
+              </Text>
             </View>
 
             {/* Connect Button */}
@@ -84,8 +71,6 @@ export default function HomeScreen() {
               className={`py-3 rounded-xl ${isConnected ? "bg-error" : "bg-primary"}`}
               onPress={handleConnect}
               activeOpacity={0.8}
-              disabled={!inputUrl.trim() && !isConnected}
-              style={!inputUrl.trim() && !isConnected ? styles.disabledButton : undefined}
             >
               <Text className="text-center text-white font-semibold text-base">
                 {buttonLabel}
@@ -156,8 +141,5 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
-  },
-  disabledButton: {
-    opacity: 0.5,
   },
 });

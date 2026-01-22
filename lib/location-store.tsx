@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import type {
   LocationState,
   LocationAction,
@@ -7,13 +6,16 @@ import type {
   ConnectionStatus,
 } from "./types/location";
 
-const STORAGE_KEY = "location_tracker_ws_url";
+// 固定のWebSocket設定
+const WS_URL = "wss://analytics-internal.trainlcd.app/ws";
+const WS_PROTOCOLS = ["thq", "thq-auth-8d4f609889f3a67352d52b46cc1e71e9c3d89fd0fea765af45ee0f5249c9a388"];
+
 const MAX_UPDATES = 500; // 保持する最大更新数
 
 const initialState: LocationState = {
   updates: [],
   connectionStatus: "disconnected",
-  wsUrl: "",
+  wsUrl: WS_URL,
   error: null,
   messageCount: 0,
   deviceIds: [],
@@ -52,10 +54,9 @@ function locationReducer(state: LocationState, action: LocationAction): Location
 interface LocationContextValue {
   state: LocationState;
   dispatch: React.Dispatch<LocationAction>;
-  connect: (url: string) => void;
+  connect: () => void;
   disconnect: () => void;
   clearUpdates: () => void;
-  setWsUrl: (url: string) => void;
 }
 
 const LocationContext = createContext<LocationContextValue | null>(null);
@@ -64,33 +65,8 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(locationReducer, initialState);
   const wsRef = useRef<WebSocket | null>(null);
 
-  // 初期化時にAsyncStorageからURLを読み込む
-  useEffect(() => {
-    const loadSavedUrl = async () => {
-      try {
-        const savedUrl = await AsyncStorage.getItem(STORAGE_KEY);
-        if (savedUrl) {
-          dispatch({ type: "SET_WS_URL", payload: savedUrl });
-        }
-      } catch (error) {
-        console.error("Failed to load saved URL:", error);
-      }
-    };
-    loadSavedUrl();
-  }, []);
-
-  // URLをAsyncStorageに保存
-  const setWsUrl = useCallback(async (url: string) => {
-    dispatch({ type: "SET_WS_URL", payload: url });
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY, url);
-    } catch (error) {
-      console.error("Failed to save URL:", error);
-    }
-  }, []);
-
-  // WebSocket接続
-  const connect = useCallback((url: string) => {
+  // WebSocket接続（固定URL・protocols使用）
+  const connect = useCallback(() => {
     // 既存の接続を閉じる
     if (wsRef.current) {
       wsRef.current.close();
@@ -100,7 +76,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "SET_ERROR", payload: null });
 
     try {
-      const ws = new WebSocket(url);
+      const ws = new WebSocket(WS_URL, WS_PROTOCOLS);
       wsRef.current = ws;
 
       ws.onopen = () => {
@@ -162,7 +138,6 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
     connect,
     disconnect,
     clearUpdates,
-    setWsUrl,
   };
 
   return (
