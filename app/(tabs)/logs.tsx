@@ -8,6 +8,7 @@ import {
   Platform,
   Alert,
   ScrollView,
+  TextInput,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -23,6 +24,7 @@ import { ConnectionStatusBadge } from "@/components/connection-status";
 import { useLocation } from "@/lib/location-store";
 import type { LogData, LogType, LogLevel } from "@/lib/types/location";
 import { cn } from "@/lib/utils";
+import { useColors } from "@/hooks/use-colors";
 
 // フィルターオプションの定義
 const LOG_TYPES: { value: LogType; label: string }[] = [
@@ -43,6 +45,9 @@ const ACCORDION_CONTENT_HEIGHT = 200;
 
 export default function LogsScreen() {
   const { state, clearUpdates } = useLocation();
+  const colors = useColors();
+  // 検索クエリ
+  const [searchQuery, setSearchQuery] = useState("");
   // 複数選択用のSet
   const [selectedTypes, setSelectedTypes] = useState<Set<LogType>>(new Set());
   const [selectedLevels, setSelectedLevels] = useState<Set<LogLevel>>(new Set());
@@ -86,7 +91,17 @@ export default function LogsScreen() {
 
   // フィルタリングされたログ
   const filteredLogs = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
     return state.logs.filter((log) => {
+      // テキスト検索フィルター
+      if (query) {
+        const message = log.log.message?.toLowerCase() || "";
+        const device = log.device?.toLowerCase() || "";
+        const type = log.log.type?.toLowerCase() || "";
+        if (!message.includes(query) && !device.includes(query) && !type.includes(query)) {
+          return false;
+        }
+      }
       // タイプフィルター（空の場合は全て表示）
       if (selectedTypes.size > 0 && !selectedTypes.has(log.log.type)) {
         return false;
@@ -101,10 +116,10 @@ export default function LogsScreen() {
       }
       return true;
     });
-  }, [state.logs, selectedTypes, selectedLevels, selectedDevices]);
+  }, [state.logs, searchQuery, selectedTypes, selectedLevels, selectedDevices]);
 
   // フィルターが適用されているかどうか
-  const hasActiveFilter = selectedTypes.size > 0 || selectedLevels.size > 0 || selectedDevices.size > 0;
+  const hasActiveFilter = searchQuery.trim() !== "" || selectedTypes.size > 0 || selectedLevels.size > 0 || selectedDevices.size > 0;
 
   const handleClearData = useCallback(() => {
     if (Platform.OS === "web") {
@@ -212,6 +227,11 @@ export default function LogsScreen() {
     opacityValue.value = withTiming(newValue ? 1 : 0, { duration: newValue ? 250 : 150 });
   }, [isFilterExpanded, rotateValue, heightValue, opacityValue, contentHeight]);
 
+  // 検索クリア
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery("");
+  }, []);
+
   const renderItem = useCallback(
     ({ item }: { item: LogData }) => (
       <View className="mb-3">
@@ -234,6 +254,27 @@ export default function LogsScreen() {
           <ConnectionStatusBadge status={state.connectionStatus} />
         </View>
 
+        {/* Search Box */}
+        <View className="mb-4 bg-surface rounded-xl border border-border flex-row items-center px-3">
+          <Text className="text-muted mr-2">🔍</Text>
+          <TextInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="メッセージを検索..."
+            placeholderTextColor={colors.muted}
+            className="flex-1 py-3 text-foreground"
+            style={{ fontSize: 16 }}
+            returnKeyType="search"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={handleClearSearch} activeOpacity={0.7}>
+              <Text className="text-muted text-lg">✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
         {/* Filter Accordion */}
         <View className="mb-4 bg-surface rounded-xl border border-border overflow-hidden">
           {/* Accordion Header */}
@@ -247,7 +288,7 @@ export default function LogsScreen() {
                 <Text className="text-base font-medium text-foreground">
                   フィルター
                 </Text>
-                {hasActiveFilter && (
+                {(selectedTypes.size > 0 || selectedLevels.size > 0 || selectedDevices.size > 0) && (
                   <View className="ml-2 bg-primary px-2 py-0.5 rounded-full">
                     <Text className="text-xs text-white font-medium">適用中</Text>
                   </View>
@@ -384,7 +425,7 @@ export default function LogsScreen() {
                 </ScrollView>
               </View>
 
-              {/* Device Filter */}
+              {/* Device Filter (only show if there are devices) */}
               {logDeviceIds.length > 0 && (
                 <View className="mt-3">
                   <Text className="text-sm text-muted mb-2">デバイス</Text>
@@ -470,6 +511,7 @@ export default function LogsScreen() {
     [
       state.connectionStatus,
       state.logs.length,
+      searchQuery,
       selectedTypes,
       selectedLevels,
       selectedDevices,
@@ -480,9 +522,11 @@ export default function LogsScreen() {
       handleTypeSelect,
       handleLevelSelect,
       handleDeviceSelect,
+      handleClearSearch,
       toggleFilter,
       arrowStyle,
       contentStyle,
+      colors.muted,
     ]
   );
 

@@ -58,3 +58,4 @@
 - [x] Androidアプリのアイコンをユーザー提供の画像に設定
 - [x] RECORD_AUDIO権限を削除（expo-audioプラグインを削除）
 - [x] expo-videoプラグインを削除
+- [x] ログ画面にテキスト検索機能を追加
