@@ -7,21 +7,21 @@ interface LogCardProps {
 }
 
 const levelConfig: Record<string, { label: string; bgClass: string; textClass: string }> = {
-  info: { label: "INFO", bgClass: "bg-primary", textClass: "text-white" },
-  warn: { label: "WARN", bgClass: "bg-warning", textClass: "text-white" },
-  warning: { label: "WARN", bgClass: "bg-warning", textClass: "text-white" },
-  error: { label: "ERROR", bgClass: "bg-error", textClass: "text-white" },
-  debug: { label: "DEBUG", bgClass: "bg-muted", textClass: "text-white" },
+  info: { label: "INFO", bgClass: "bg-primary/20", textClass: "text-primary" },
+  warn: { label: "WARN", bgClass: "bg-warning/20", textClass: "text-warning" },
+  warning: { label: "WARN", bgClass: "bg-warning/20", textClass: "text-warning" },
+  error: { label: "ERROR", bgClass: "bg-error/20", textClass: "text-error" },
+  debug: { label: "DEBUG", bgClass: "bg-muted/20", textClass: "text-muted" },
 };
 
 const logTypeConfig: Record<string, { label: string; bgClass: string; textClass: string }> = {
-  app: { label: "APP", bgClass: "bg-success", textClass: "text-white" },
-  system: { label: "SYSTEM", bgClass: "bg-warning", textClass: "text-white" },
-  client: { label: "CLIENT", bgClass: "bg-primary", textClass: "text-white" },
+  app: { label: "APP", bgClass: "bg-success/20", textClass: "text-success" },
+  system: { label: "SYSTEM", bgClass: "bg-warning/20", textClass: "text-warning" },
+  client: { label: "CLIENT", bgClass: "bg-primary/20", textClass: "text-primary" },
 };
 
-const defaultLevelConfig = { label: "LOG", bgClass: "bg-muted", textClass: "text-white" };
-const defaultLogTypeConfig = { label: "OTHER", bgClass: "bg-muted", textClass: "text-white" };
+const defaultLevelConfig = { label: "LOG", bgClass: "bg-muted/20", textClass: "text-muted" };
+const defaultLogTypeConfig = { label: "OTHER", bgClass: "bg-muted/20", textClass: "text-muted" };
 
 function formatDate(timestamp: number): string {
   const date = new Date(timestamp);

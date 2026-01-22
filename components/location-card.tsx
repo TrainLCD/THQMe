@@ -7,14 +7,14 @@ interface LocationCardProps {
 }
 
 const stateConfig: Record<MovingState, { label: string; bgClass: string; textClass: string }> = {
-  arrived: { label: "到着", bgClass: "bg-success", textClass: "text-white" },
-  approaching: { label: "接近中", bgClass: "bg-warning", textClass: "text-white" },
-  passing: { label: "通過中", bgClass: "bg-primary", textClass: "text-white" },
-  moving: { label: "移動中", bgClass: "bg-muted", textClass: "text-white" },
+  arrived: { label: "到着", bgClass: "bg-success/20", textClass: "text-success" },
+  approaching: { label: "接近中", bgClass: "bg-warning/20", textClass: "text-warning" },
+  passing: { label: "通過中", bgClass: "bg-primary/20", textClass: "text-primary" },
+  moving: { label: "移動中", bgClass: "bg-muted/20", textClass: "text-muted" },
 };
 
 // 未知のstate値に対するフォールバック
-const defaultStateConfig = { label: "不明", bgClass: "bg-muted", textClass: "text-white" };
+const defaultStateConfig = { label: "不明", bgClass: "bg-muted/20", textClass: "text-muted" };
 
 function formatCoordinate(value: number, type: "lat" | "lng"): string {
   const abs = Math.abs(value);
