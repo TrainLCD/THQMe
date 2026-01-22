@@ -19,3 +19,4 @@
 - [x] WebSocket受信データのコンソールログ出力機能を追加
 - [x] WebSocket接続確立時に{ type: "subscribe" }を送信
 - [x] タイムラインタブのエラーを修正（未知のstate値のフォールバック追加）
+- [x] アプリ名をTHQMeに変更

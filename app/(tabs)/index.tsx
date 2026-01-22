@@ -45,9 +45,9 @@ export default function HomeScreen() {
         <View className="flex-1 gap-6">
           {/* Header */}
           <View className="items-center gap-2">
-            <Text className="text-3xl font-bold text-foreground">Location Tracker</Text>
+            <Text className="text-3xl font-bold text-foreground">THQMe</Text>
             <Text className="text-base text-muted text-center">
-              TrainLCD位置情報をリアルタイム受信
+              TrainLCD位置情報モニター
             </Text>
           </View>
 
