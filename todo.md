@@ -16,3 +16,4 @@
 - [x] WebSocket URLを固定値に変更（wss://analytics-internal.trainlcd.app/ws）
 - [x] WebSocket protocolsを追加（thq, thq-auth-xxx）
 - [x] URL入力欄を削除してシンプルなUIに変更
+- [x] WebSocket受信データのコンソールログ出力機能を追加

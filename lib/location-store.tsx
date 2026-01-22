@@ -72,6 +72,8 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
       wsRef.current.close();
     }
 
+    console.log("[WebSocket] Connecting to:", WS_URL);
+    console.log("[WebSocket] Using protocols:", WS_PROTOCOLS);
     dispatch({ type: "SET_CONNECTION_STATUS", payload: "connecting" });
     dispatch({ type: "SET_ERROR", payload: null });
 
@@ -80,26 +82,34 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
       wsRef.current = ws;
 
       ws.onopen = () => {
+        console.log("[WebSocket] Connected to:", WS_URL);
         dispatch({ type: "SET_CONNECTION_STATUS", payload: "connected" });
       };
 
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+          console.log("[WebSocket] Received message:", data);
           if (data.type === "location_update") {
+            console.log("[WebSocket] Location update from device:", data.device, "coords:", data.coords);
             dispatch({ type: "ADD_UPDATE", payload: data as LocationUpdate });
+          } else {
+            console.log("[WebSocket] Unknown message type:", data.type);
           }
         } catch (error) {
-          console.error("Failed to parse message:", error);
+          console.error("[WebSocket] Failed to parse message:", error);
+          console.log("[WebSocket] Raw message:", event.data);
         }
       };
 
-      ws.onerror = () => {
+      ws.onerror = (error) => {
+        console.error("[WebSocket] Connection error:", error);
         dispatch({ type: "SET_CONNECTION_STATUS", payload: "error" });
         dispatch({ type: "SET_ERROR", payload: "WebSocket connection error" });
       };
 
-      ws.onclose = () => {
+      ws.onclose = (event) => {
+        console.log("[WebSocket] Connection closed. Code:", event.code, "Reason:", event.reason);
         dispatch({ type: "SET_CONNECTION_STATUS", payload: "disconnected" });
         wsRef.current = null;
       };
