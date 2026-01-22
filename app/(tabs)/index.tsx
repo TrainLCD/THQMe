@@ -61,6 +61,7 @@ export default function HomeScreen() {
           <View className="bg-surface rounded-2xl p-5 border border-border">
             <Text className="text-lg font-semibold text-foreground mb-4">統計情報</Text>
 
+            {/* Row 1: デバイス数 / 受信メッセージ */}
             <View className="flex-row justify-between mb-3">
               <View className="flex-1 items-center">
                 <Text className="text-3xl font-bold text-primary">
@@ -77,7 +78,24 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            <View className="border-t border-border pt-3 mt-3">
+            {/* Row 2: 位置情報更新 / 受信ログ */}
+            <View className="flex-row justify-between mb-3 pt-3 border-t border-border">
+              <View className="flex-1 items-center">
+                <Text className="text-3xl font-bold text-success">
+                  {state.updates.length}
+                </Text>
+                <Text className="text-sm text-muted mt-1">位置情報更新</Text>
+              </View>
+              <View className="w-px bg-border" />
+              <View className="flex-1 items-center">
+                <Text className="text-3xl font-bold text-warning">
+                  {state.logs.length}
+                </Text>
+                <Text className="text-sm text-muted mt-1">受信ログ</Text>
+              </View>
+            </View>
+
+            <View className="border-t border-border pt-3">
               <View className="flex-row justify-between">
                 <Text className="text-muted">最終更新</Text>
                 <Text className="text-foreground font-medium">{formatLastUpdate()}</Text>
