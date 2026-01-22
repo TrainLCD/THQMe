@@ -32,3 +32,4 @@
 - [x] logメッセージ表示UIを実装
 - [x] LogData型を実際のデータ構造（ネストされたlogオブジェクト）に修正
 - [x] LogInfo型のlevelを明確に定義（info/debug/warn/error）
+- [x] subscribeメッセージにdevice: "THQMe"を追加

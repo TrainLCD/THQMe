@@ -96,7 +96,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
         console.log("[WebSocket] Connected to:", WS_URL);
         
         // サーバーにsubscribeメッセージを送信
-        const subscribeMessage = JSON.stringify({ type: "subscribe" });
+       const subscribeMessage = JSON.stringify({ type: "subscribe", device: "THQMe" });
         ws.send(subscribeMessage);
         console.log("[WebSocket] Sent subscribe message:", subscribeMessage);
         
