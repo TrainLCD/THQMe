@@ -30,3 +30,5 @@
 - [x] logタイプメッセージの型定義を追加
 - [x] logメッセージをストアに保存
 - [x] logメッセージ表示UIを実装
+- [x] LogData型を実際のデータ構造（ネストされたlogオブジェクト）に修正
+- [x] LogInfo型のlevelを明確に定義（info/debug/warn/error）

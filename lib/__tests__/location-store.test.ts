@@ -76,12 +76,15 @@ const createMockUpdate = (overrides: Partial<LocationUpdate> = {}): LocationUpda
 });
 
 const createMockLog = (overrides: Partial<LogData> = {}): LogData => ({
-  device: "test-device",
-  id: `log-${Date.now()}`,
-  level: "info",
-  message: "Test log message",
-  timestamp: Date.now(),
   type: "log",
+  id: `log-${Date.now()}`,
+  device: "test-device",
+  timestamp: Date.now(),
+  log: {
+    type: "app",
+    level: "info",
+    message: "Test log message",
+  },
   ...overrides,
 });
 
@@ -171,21 +174,21 @@ describe("Location Store Reducer", () => {
       expect(newState.logs[0].id).toBe("new-log");
     });
 
-    it("should handle nullable fields in log", () => {
+    it("should handle nested log object with level and message", () => {
       const log = createMockLog({
-        device: null,
-        id: null,
-        level: null,
-        message: null,
+        log: {
+          type: "system",
+          level: "error",
+          message: "Connection failed",
+        },
       });
       const action: LocationAction = { type: "ADD_LOG", payload: log };
       
       const newState = locationReducer(initialState, action);
       
-      expect(newState.logs[0].device).toBeNull();
-      expect(newState.logs[0].id).toBeNull();
-      expect(newState.logs[0].level).toBeNull();
-      expect(newState.logs[0].message).toBeNull();
+      expect(newState.logs[0].log.level).toBe("error");
+      expect(newState.logs[0].log.message).toBe("Connection failed");
+      expect(newState.logs[0].log.type).toBe("system");
     });
   });
 
@@ -312,15 +315,17 @@ describe("LocationUpdate type validation", () => {
 });
 
 describe("LogData type validation", () => {
-  it("should have correct structure", () => {
+  it("should have correct structure with nested log object", () => {
     const log = createMockLog();
     
-    expect(log).toHaveProperty("device");
-    expect(log).toHaveProperty("id");
-    expect(log).toHaveProperty("level");
-    expect(log).toHaveProperty("message");
-    expect(log).toHaveProperty("timestamp");
     expect(log).toHaveProperty("type");
+    expect(log).toHaveProperty("id");
+    expect(log).toHaveProperty("device");
+    expect(log).toHaveProperty("timestamp");
+    expect(log).toHaveProperty("log");
     expect(log.type).toBe("log");
+    expect(log.log).toHaveProperty("type");
+    expect(log.log).toHaveProperty("level");
+    expect(log.log).toHaveProperty("message");
   });
 });

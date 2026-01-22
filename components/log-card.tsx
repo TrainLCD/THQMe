@@ -14,7 +14,14 @@ const levelConfig: Record<string, { label: string; bgClass: string; textClass: s
   debug: { label: "DEBUG", bgClass: "bg-muted/20", textClass: "text-muted" },
 };
 
+const logTypeConfig: Record<string, { label: string; bgClass: string; textClass: string }> = {
+  app: { label: "APP", bgClass: "bg-success/20", textClass: "text-success" },
+  system: { label: "SYSTEM", bgClass: "bg-warning/20", textClass: "text-warning" },
+  client: { label: "CLIENT", bgClass: "bg-primary/20", textClass: "text-primary" },
+};
+
 const defaultLevelConfig = { label: "LOG", bgClass: "bg-muted/20", textClass: "text-muted" };
+const defaultLogTypeConfig = { label: "OTHER", bgClass: "bg-muted/20", textClass: "text-muted" };
 
 function formatDate(timestamp: number): string {
   const date = new Date(timestamp);
@@ -34,7 +41,11 @@ function formatTimestamp(timestamp: number): string {
 }
 
 export function LogCard({ log }: LogCardProps) {
-  const levelConf = log.level ? (levelConfig[log.level] || defaultLevelConfig) : defaultLevelConfig;
+  const level = log.log?.level || "info";
+  const levelConf = levelConfig[level] || defaultLevelConfig;
+  const message = log.log?.message || "(no message)";
+  const logType = log.log?.type || "";
+  const logTypeConf = logTypeConfig[logType] || defaultLogTypeConfig;
 
   return (
     <View className="bg-surface rounded-xl p-4 border border-border">
@@ -69,18 +80,25 @@ export function LogCard({ log }: LogCardProps) {
         <View className="flex-row items-start">
           <Text className="text-muted text-sm mr-2">💬</Text>
           <Text className="text-foreground flex-1">
-            {log.message || "(no message)"}
+            {message}
           </Text>
         </View>
       </View>
 
-      {/* Level Badge */}
-      <View className="flex-row">
+      {/* Level and Type Badges */}
+      <View className="flex-row gap-2">
         <View className={cn("px-3 py-1 rounded-full", levelConf.bgClass)}>
           <Text className={cn("text-sm font-medium", levelConf.textClass)}>
             ● {levelConf.label}
           </Text>
         </View>
+        {logType && (
+          <View className={cn("px-3 py-1 rounded-full", logTypeConf.bgClass)}>
+            <Text className={cn("text-sm font-medium", logTypeConf.textClass)}>
+              {logTypeConf.label}
+            </Text>
+          </View>
+        )}
       </View>
     </View>
   );

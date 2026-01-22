@@ -30,15 +30,52 @@ export interface LocationUpdate {
 }
 
 /**
+ * ログレベル
+ * - info: 情報
+ * - debug: デバッグ
+ * - warn: 警告
+ * - error: エラー
+ */
+export type LogLevel = "info" | "debug" | "warn" | "error";
+
+/**
+ * ログタイプ
+ * - app: アプリケーションログ
+ * - system: システムログ
+ * - client: クライアントログ
+ */
+export type LogType = "app" | "system" | "client";
+
+/**
+ * ログの詳細情報（ネストされたオブジェクト）
+ */
+export interface LogInfo {
+  type: LogType;
+  level: LogLevel;
+  message: string;
+}
+
+/**
  * WebSocket経由で受信するログデータ
+ * 実際のデータ構造:
+ * {
+ *   "type": "log",
+ *   "id": "xxx",
+ *   "device": "iPhone 16",
+ *   "timestamp": 1768743378562,
+ *   "log": {
+ *     "type": "app",
+ *     "level": "info",
+ *     "message": "Connected to the telemetry server as a app."
+ *   }
+ * }
  */
 export interface LogData {
-  device: string | null | undefined;
-  id: string | null | undefined;
-  level: string | null | undefined;
-  message: string | null | undefined;
-  timestamp: number;
   type: "log";
+  id: string;
+  device: string;
+  timestamp: number;
+  log: LogInfo;
 }
 
 /**

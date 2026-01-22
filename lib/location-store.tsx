@@ -111,7 +111,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
             console.log("[WebSocket] Location update from device:", data.device, "coords:", data.coords);
             dispatch({ type: "ADD_UPDATE", payload: data as LocationUpdate });
           } else if (data.type === "log") {
-            console.log("[WebSocket] Log message:", data.message);
+            console.log("[WebSocket] Log message:", data.log?.message);
             dispatch({ type: "ADD_LOG", payload: data as LogData });
           } else {
             console.log("[WebSocket] Unknown message type:", data.type);
