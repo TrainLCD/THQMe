@@ -8,6 +8,7 @@ import {
   Platform,
   Alert,
   ScrollView,
+  TextInput,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -23,6 +24,7 @@ import { ConnectionStatusBadge } from "@/components/connection-status";
 import { useLocation } from "@/lib/location-store";
 import type { LocationUpdate, MovingState } from "@/lib/types/location";
 import { cn } from "@/lib/utils";
+import { useColors } from "@/hooks/use-colors";
 
 // 状態フィルターオプションの定義
 const MOVING_STATES: { value: MovingState; label: string }[] = [
@@ -38,6 +40,9 @@ const ACCORDION_CONTENT_HEIGHT_WITH_DEVICE = 170; // 状態 + デバイスフィ
 
 export default function TimelineScreen() {
   const { state, clearUpdates } = useLocation();
+  const colors = useColors();
+  // 検索クエリ
+  const [searchQuery, setSearchQuery] = useState("");
   // 複数選択用のSet
   const [selectedStates, setSelectedStates] = useState<Set<MovingState>>(new Set());
   const [selectedDevices, setSelectedDevices] = useState<Set<string>>(new Set());
@@ -69,9 +74,18 @@ export default function TimelineScreen() {
     ? ACCORDION_CONTENT_HEIGHT_WITH_DEVICE
     : ACCORDION_CONTENT_HEIGHT_BASE;
 
-  // Filter updates by selected states and devices
+  // Filter updates by search query, selected states and devices
   const filteredUpdates = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
     return state.updates.filter((update) => {
+      // テキスト検索フィルター
+      if (query) {
+        const device = update.device?.toLowerCase() || "";
+        const state = update.state?.toLowerCase() || "";
+        if (!device.includes(query) && !state.includes(query)) {
+          return false;
+        }
+      }
       // 状態フィルター（空の場合は全て表示）
       if (selectedStates.size > 0 && !selectedStates.has(update.state)) {
         return false;
@@ -82,10 +96,10 @@ export default function TimelineScreen() {
       }
       return true;
     });
-  }, [state.updates, selectedStates, selectedDevices]);
+  }, [state.updates, searchQuery, selectedStates, selectedDevices]);
 
   // フィルターが適用されているかどうか
-  const hasActiveFilter = selectedStates.size > 0 || selectedDevices.size > 0;
+  const hasActiveFilter = searchQuery.trim() !== "" || selectedStates.size > 0 || selectedDevices.size > 0;
 
   const handleClearData = useCallback(() => {
     if (Platform.OS === "web") {
@@ -172,6 +186,11 @@ export default function TimelineScreen() {
     opacityValue.value = withTiming(newValue ? 1 : 0, { duration: newValue ? 250 : 150 });
   }, [isFilterExpanded, rotateValue, heightValue, opacityValue, contentHeight]);
 
+  // 検索クリア
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery("");
+  }, []);
+
   const renderItem = useCallback(
     ({ item }: { item: LocationUpdate }) => (
       <View className="mb-3">
@@ -192,6 +211,27 @@ export default function TimelineScreen() {
           <ConnectionStatusBadge status={state.connectionStatus} />
         </View>
 
+        {/* Search Box */}
+        <View className="mb-4 bg-surface rounded-xl border border-border flex-row items-center px-3">
+          <Text className="text-muted mr-2">🔍</Text>
+          <TextInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="タイムラインを検索..."
+            placeholderTextColor={colors.muted}
+            className="flex-1 text-foreground"
+            style={{ fontSize: 16, paddingVertical: 16 }}
+            returnKeyType="search"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={handleClearSearch} activeOpacity={0.7}>
+              <Text className="text-muted text-lg">✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
         {/* Filter Accordion */}
         <View className="mb-4 bg-surface rounded-xl border border-border overflow-hidden">
           {/* Accordion Header */}
@@ -205,7 +245,7 @@ export default function TimelineScreen() {
                 <Text className="text-base font-medium text-foreground">
                   フィルター
                 </Text>
-                {hasActiveFilter && (
+                {(selectedStates.size > 0 || selectedDevices.size > 0) && (
                   <View className="ml-2 bg-primary px-2 py-0.5 rounded-full">
                     <Text className="text-xs text-white font-medium">適用中</Text>
                   </View>
@@ -368,6 +408,7 @@ export default function TimelineScreen() {
       state.connectionStatus,
       state.deviceIds,
       state.updates.length,
+      searchQuery,
       selectedStates,
       selectedDevices,
       filteredUpdates.length,
@@ -375,9 +416,11 @@ export default function TimelineScreen() {
       handleClearData,
       handleStateSelect,
       handleDeviceSelect,
+      handleClearSearch,
       toggleFilter,
       arrowStyle,
       contentStyle,
+      colors.muted,
     ]
   );
 
