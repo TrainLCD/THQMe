@@ -34,3 +34,4 @@
 - [x] LogInfo型のlevelを明確に定義（info/debug/warn/error）
 - [x] subscribeメッセージにdevice: "THQMe"を追加
 - [x] WebSocket自動再接続機能を実装
+- [x] スプラッシュ画面を白背景にアイコン表示に設定
