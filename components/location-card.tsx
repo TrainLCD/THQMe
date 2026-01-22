@@ -44,7 +44,9 @@ function formatSpeed(speed: number | null | undefined): string {
   if (speed === null || speed === undefined || speed === -1) {
     return "-";
   }
-  return `${speed.toFixed(1)} m/s`;
+  // m/s → km/h に変換 (x 3.6)
+  const kmh = speed * 3.6;
+  return `${kmh.toFixed(1)} km/h`;
 }
 
 function formatAccuracy(accuracy: number | null | undefined): string {
