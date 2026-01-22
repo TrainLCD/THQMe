@@ -125,6 +125,9 @@ const config: ExpoConfig = {
     typedRoutes: true,
     reactCompiler: true,
   },
+  extra: {
+    thqWsAuthToken: process.env.THQ_WS_AUTH_TOKEN || "",
+  },
 };
 
 export default config;

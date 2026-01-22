@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
+import Constants from "expo-constants";
 import type {
   LocationState,
   LocationAction,
@@ -9,7 +10,8 @@ import type {
 
 // 固定のWebSocket設定
 const WS_URL = "wss://analytics-internal.trainlcd.app/ws";
-const WS_PROTOCOLS = ["thq", "thq-auth-8d4f609889f3a67352d52b46cc1e71e9c3d89fd0fea765af45ee0f5249c9a388"];
+const WS_AUTH_TOKEN = Constants.expoConfig?.extra?.thqWsAuthToken || "";
+const WS_PROTOCOLS = ["thq", `thq-auth-${WS_AUTH_TOKEN}`];
 
 const MAX_UPDATES = 500; // 保持する最大更新数
 const MAX_LOGS = 500; // 保持する最大ログ数
