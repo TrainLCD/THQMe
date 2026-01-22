@@ -14,6 +14,11 @@ const WS_PROTOCOLS = ["thq", "thq-auth-8d4f609889f3a67352d52b46cc1e71e9c3d89fd0f
 const MAX_UPDATES = 500; // 保持する最大更新数
 const MAX_LOGS = 200; // 保持する最大ログ数
 
+// 自動再接続設定
+const RECONNECT_INITIAL_DELAY = 1000; // 初回再接続待機時間（1秒）
+const RECONNECT_MAX_DELAY = 30000; // 最大再接続待機時間（30秒）
+const RECONNECT_MULTIPLIER = 1.5; // 再接続待機時間の増加倍率
+
 const initialState: LocationState = {
   updates: [],
   logs: [],
@@ -75,9 +80,45 @@ const LocationContext = createContext<LocationContextValue | null>(null);
 export function LocationProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(locationReducer, initialState);
   const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectDelayRef = useRef(RECONNECT_INITIAL_DELAY);
+  const shouldReconnectRef = useRef(true); // 自動再接続を有効にするフラグ
 
-  // WebSocket接続（固定URL・protocols使用）
-  const connect = useCallback(() => {
+  // 再接続タイマーをクリア
+  const clearReconnectTimeout = useCallback(() => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+  }, []);
+
+  // 再接続をスケジュール
+  const scheduleReconnect = useCallback(() => {
+    if (!shouldReconnectRef.current) {
+      console.log("[WebSocket] Auto-reconnect disabled, not scheduling reconnect");
+      return;
+    }
+
+    clearReconnectTimeout();
+
+    const delay = reconnectDelayRef.current;
+    console.log(`[WebSocket] Scheduling reconnect in ${delay}ms`);
+    
+    dispatch({ type: "SET_ERROR", payload: `再接続中... (${Math.round(delay / 1000)}秒後)` });
+
+    reconnectTimeoutRef.current = setTimeout(() => {
+      console.log("[WebSocket] Attempting to reconnect...");
+      // 次回の再接続待機時間を増加（指数バックオフ）
+      reconnectDelayRef.current = Math.min(
+        reconnectDelayRef.current * RECONNECT_MULTIPLIER,
+        RECONNECT_MAX_DELAY
+      );
+      connectInternal();
+    }, delay);
+  }, []);
+
+  // 内部接続関数（再接続ロジック用）
+  const connectInternal = useCallback(() => {
     // 既存の接続を閉じる
     if (wsRef.current) {
       wsRef.current.close();
@@ -95,8 +136,11 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
       ws.onopen = () => {
         console.log("[WebSocket] Connected to:", WS_URL);
         
+        // 接続成功時に再接続待機時間をリセット
+        reconnectDelayRef.current = RECONNECT_INITIAL_DELAY;
+        
         // サーバーにsubscribeメッセージを送信
-       const subscribeMessage = JSON.stringify({ type: "subscribe", device: "THQMe" });
+        const subscribeMessage = JSON.stringify({ type: "subscribe", device: "THQMe" });
         ws.send(subscribeMessage);
         console.log("[WebSocket] Sent subscribe message:", subscribeMessage);
         
@@ -125,28 +169,54 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
       ws.onerror = (error) => {
         console.error("[WebSocket] Connection error:", error);
         dispatch({ type: "SET_CONNECTION_STATUS", payload: "error" });
-        dispatch({ type: "SET_ERROR", payload: "WebSocket connection error" });
+        dispatch({ type: "SET_ERROR", payload: "WebSocket接続エラー" });
       };
 
       ws.onclose = (event) => {
         console.log("[WebSocket] Connection closed. Code:", event.code, "Reason:", event.reason);
         dispatch({ type: "SET_CONNECTION_STATUS", payload: "disconnected" });
         wsRef.current = null;
+
+        // 自動再接続が有効で、正常終了でない場合は再接続をスケジュール
+        // コード1000は正常終了、1001はページ離脱
+        if (shouldReconnectRef.current && event.code !== 1000 && event.code !== 1001) {
+          scheduleReconnect();
+        } else if (shouldReconnectRef.current) {
+          // 正常終了でも自動再接続が有効なら再接続
+          scheduleReconnect();
+        }
       };
     } catch (error) {
       dispatch({ type: "SET_CONNECTION_STATUS", payload: "error" });
-      dispatch({ type: "SET_ERROR", payload: "Failed to create WebSocket connection" });
+      dispatch({ type: "SET_ERROR", payload: "WebSocket接続の作成に失敗しました" });
+      
+      // エラー時も再接続をスケジュール
+      if (shouldReconnectRef.current) {
+        scheduleReconnect();
+      }
     }
-  }, []);
+  }, [scheduleReconnect]);
 
-  // WebSocket切断
+  // 外部から呼び出す接続関数
+  const connect = useCallback(() => {
+    shouldReconnectRef.current = true;
+    reconnectDelayRef.current = RECONNECT_INITIAL_DELAY;
+    clearReconnectTimeout();
+    connectInternal();
+  }, [connectInternal, clearReconnectTimeout]);
+
+  // WebSocket切断（自動再接続も停止）
   const disconnect = useCallback(() => {
+    shouldReconnectRef.current = false;
+    clearReconnectTimeout();
+    
     if (wsRef.current) {
-      wsRef.current.close();
+      wsRef.current.close(1000, "User disconnected"); // 正常終了コードを送信
       wsRef.current = null;
     }
     dispatch({ type: "SET_CONNECTION_STATUS", payload: "disconnected" });
-  }, []);
+    dispatch({ type: "SET_ERROR", payload: null });
+  }, [clearReconnectTimeout]);
 
   // 更新をクリア
   const clearUpdates = useCallback(() => {
@@ -156,11 +226,13 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
   // クリーンアップ
   useEffect(() => {
     return () => {
+      shouldReconnectRef.current = false;
+      clearReconnectTimeout();
       if (wsRef.current) {
         wsRef.current.close();
       }
     };
-  }, []);
+  }, [clearReconnectTimeout]);
 
   const value: LocationContextValue = {
     state,
