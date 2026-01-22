@@ -17,3 +17,4 @@
 - [x] WebSocket protocolsを追加（thq, thq-auth-xxx）
 - [x] URL入力欄を削除してシンプルなUIに変更
 - [x] WebSocket受信データのコンソールログ出力機能を追加
+- [x] WebSocket接続確立時に{ type: "subscribe" }を送信

@@ -83,6 +83,12 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
 
       ws.onopen = () => {
         console.log("[WebSocket] Connected to:", WS_URL);
+        
+        // サーバーにsubscribeメッセージを送信
+        const subscribeMessage = JSON.stringify({ type: "subscribe" });
+        ws.send(subscribeMessage);
+        console.log("[WebSocket] Sent subscribe message:", subscribeMessage);
+        
         dispatch({ type: "SET_CONNECTION_STATUS", payload: "connected" });
       };
 
