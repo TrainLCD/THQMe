@@ -8,6 +8,7 @@ import "react-native-reanimated";
 import { Platform } from "react-native";
 import "@/lib/_core/nativewind-pressable";
 import { ThemeProvider } from "@/lib/theme-provider";
+import { LocationProvider } from "@/lib/location-store";
 import {
   SafeAreaFrameContext,
   SafeAreaInsetsContext,
@@ -80,8 +81,9 @@ export default function RootLayout() {
 
   const content = (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <trpc.Provider client={trpcClient} queryClient={queryClient}>
-        <QueryClientProvider client={queryClient}>
+      <LocationProvider>
+        <trpc.Provider client={trpcClient} queryClient={queryClient}>
+          <QueryClientProvider client={queryClient}>
           {/* Default to hiding native headers so raw route segments don't appear (e.g. "(tabs)", "products/[id]"). */}
           {/* If a screen needs the native header, explicitly enable it and set a human title via Stack.Screen options. */}
           {/* in order for ios apps tab switching to work properly, use presentation: "fullScreenModal" for login page, whenever you decide to use presentation: "modal*/}
@@ -91,9 +93,10 @@ export default function RootLayout() {
           </Stack>
           <StatusBar style="auto" />
         </QueryClientProvider>
-      </trpc.Provider>
-    </GestureHandlerRootView>
-  );
+          </trpc.Provider>
+        </LocationProvider>
+      </GestureHandlerRootView>
+    );
 
   const shouldOverrideSafeArea = Platform.OS === "web";
 
