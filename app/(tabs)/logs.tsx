@@ -24,15 +24,13 @@ import type { LogData, LogType, LogLevel } from "@/lib/types/location";
 import { cn } from "@/lib/utils";
 
 // フィルターオプションの定義
-const LOG_TYPES: { value: LogType | null; label: string }[] = [
-  { value: null, label: "すべて" },
+const LOG_TYPES: { value: LogType; label: string }[] = [
   { value: "app", label: "APP" },
   { value: "system", label: "SYSTEM" },
   { value: "client", label: "CLIENT" },
 ];
 
-const LOG_LEVELS: { value: LogLevel | null; label: string }[] = [
-  { value: null, label: "すべて" },
+const LOG_LEVELS: { value: LogLevel; label: string }[] = [
   { value: "info", label: "INFO" },
   { value: "debug", label: "DEBUG" },
   { value: "warn", label: "WARN" },
@@ -41,9 +39,10 @@ const LOG_LEVELS: { value: LogLevel | null; label: string }[] = [
 
 export default function LogsScreen() {
   const { state, clearUpdates } = useLocation();
-  const [selectedType, setSelectedType] = useState<LogType | null>(null);
-  const [selectedLevel, setSelectedLevel] = useState<LogLevel | null>(null);
-  const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
+  // 複数選択用のSet
+  const [selectedTypes, setSelectedTypes] = useState<Set<LogType>>(new Set());
+  const [selectedLevels, setSelectedLevels] = useState<Set<LogLevel>>(new Set());
+  const [selectedDevices, setSelectedDevices] = useState<Set<string>>(new Set());
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
 
   // アニメーション用の共有値
@@ -70,24 +69,24 @@ export default function LogsScreen() {
   // フィルタリングされたログ
   const filteredLogs = useMemo(() => {
     return state.logs.filter((log) => {
-      // タイプフィルター
-      if (selectedType && log.log.type !== selectedType) {
+      // タイプフィルター（空の場合は全て表示）
+      if (selectedTypes.size > 0 && !selectedTypes.has(log.log.type)) {
         return false;
       }
-      // レベルフィルター
-      if (selectedLevel && log.log.level !== selectedLevel) {
+      // レベルフィルター（空の場合は全て表示）
+      if (selectedLevels.size > 0 && !selectedLevels.has(log.log.level)) {
         return false;
       }
-      // デバイスフィルター
-      if (selectedDevice && log.device !== selectedDevice) {
+      // デバイスフィルター（空の場合は全て表示）
+      if (selectedDevices.size > 0 && !selectedDevices.has(log.device)) {
         return false;
       }
       return true;
     });
-  }, [state.logs, selectedType, selectedLevel, selectedDevice]);
+  }, [state.logs, selectedTypes, selectedLevels, selectedDevices]);
 
   // フィルターが適用されているかどうか
-  const hasActiveFilter = selectedType || selectedLevel || selectedDevice;
+  const hasActiveFilter = selectedTypes.size > 0 || selectedLevels.size > 0 || selectedDevices.size > 0;
 
   const handleClearData = useCallback(() => {
     if (Platform.OS === "web") {
@@ -113,24 +112,68 @@ export default function LogsScreen() {
     }
   }, [clearUpdates]);
 
-  const handleFilterSelect = useCallback(
-    (
-      type: "type" | "level" | "device",
-      value: LogType | LogLevel | string | null
-    ) => {
-      if (Platform.OS !== "web") {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
-      if (type === "type") {
-        setSelectedType(value as LogType | null);
-      } else if (type === "level") {
-        setSelectedLevel(value as LogLevel | null);
-      } else {
-        setSelectedDevice(value as string | null);
-      }
-    },
-    []
-  );
+  // タイプフィルターの選択/解除
+  const handleTypeSelect = useCallback((value: LogType | null) => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    if (value === null) {
+      // 「すべて」を選択した場合は全解除
+      setSelectedTypes(new Set());
+    } else {
+      setSelectedTypes((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(value)) {
+          newSet.delete(value);
+        } else {
+          newSet.add(value);
+        }
+        return newSet;
+      });
+    }
+  }, []);
+
+  // レベルフィルターの選択/解除
+  const handleLevelSelect = useCallback((value: LogLevel | null) => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    if (value === null) {
+      // 「すべて」を選択した場合は全解除
+      setSelectedLevels(new Set());
+    } else {
+      setSelectedLevels((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(value)) {
+          newSet.delete(value);
+        } else {
+          newSet.add(value);
+        }
+        return newSet;
+      });
+    }
+  }, []);
+
+  // デバイスフィルターの選択/解除
+  const handleDeviceSelect = useCallback((value: string | null) => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    if (value === null) {
+      // 「すべて」を選択した場合は全解除
+      setSelectedDevices(new Set());
+    } else {
+      setSelectedDevices((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(value)) {
+          newSet.delete(value);
+        } else {
+          newSet.add(value);
+        }
+        return newSet;
+      });
+    }
+  }, []);
 
   const toggleFilter = useCallback(() => {
     if (Platform.OS !== "web") {
@@ -173,7 +216,7 @@ export default function LogsScreen() {
             activeOpacity={0.7}
             style={styles.accordionHeader}
           >
-            <View className="flex-row items-center justify-between px-4 py-3">
+            <View className="flex-row items-center justify-between px-4 py-4">
               <View className="flex-row items-center">
                 <Text className="text-base font-medium text-foreground">
                   フィルター
@@ -201,17 +244,41 @@ export default function LogsScreen() {
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.filterScrollContent}
                 >
+                  {/* すべてボタン */}
+                  <TouchableOpacity
+                    onPress={() => handleTypeSelect(null)}
+                    activeOpacity={0.7}
+                    style={styles.filterButton}
+                  >
+                    <View
+                      className={cn(
+                        "px-3 py-2 rounded-full border",
+                        selectedTypes.size === 0
+                          ? "bg-primary border-primary"
+                          : "bg-background border-border"
+                      )}
+                    >
+                      <Text
+                        className={cn(
+                          "text-sm font-medium",
+                          selectedTypes.size === 0 ? "text-white" : "text-foreground"
+                        )}
+                      >
+                        すべて
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
                   {LOG_TYPES.map((option) => (
                     <TouchableOpacity
                       key={option.label}
-                      onPress={() => handleFilterSelect("type", option.value)}
+                      onPress={() => handleTypeSelect(option.value)}
                       activeOpacity={0.7}
                       style={styles.filterButton}
                     >
                       <View
                         className={cn(
                           "px-3 py-2 rounded-full border",
-                          selectedType === option.value
+                          selectedTypes.has(option.value)
                             ? "bg-primary border-primary"
                             : "bg-background border-border"
                         )}
@@ -219,7 +286,7 @@ export default function LogsScreen() {
                         <Text
                           className={cn(
                             "text-sm font-medium",
-                            selectedType === option.value ? "text-white" : "text-foreground"
+                            selectedTypes.has(option.value) ? "text-white" : "text-foreground"
                           )}
                         >
                           {option.label}
@@ -238,17 +305,41 @@ export default function LogsScreen() {
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.filterScrollContent}
                 >
+                  {/* すべてボタン */}
+                  <TouchableOpacity
+                    onPress={() => handleLevelSelect(null)}
+                    activeOpacity={0.7}
+                    style={styles.filterButton}
+                  >
+                    <View
+                      className={cn(
+                        "px-3 py-2 rounded-full border",
+                        selectedLevels.size === 0
+                          ? "bg-primary border-primary"
+                          : "bg-background border-border"
+                      )}
+                    >
+                      <Text
+                        className={cn(
+                          "text-sm font-medium",
+                          selectedLevels.size === 0 ? "text-white" : "text-foreground"
+                        )}
+                      >
+                        すべて
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
                   {LOG_LEVELS.map((option) => (
                     <TouchableOpacity
                       key={option.label}
-                      onPress={() => handleFilterSelect("level", option.value)}
+                      onPress={() => handleLevelSelect(option.value)}
                       activeOpacity={0.7}
                       style={styles.filterButton}
                     >
                       <View
                         className={cn(
                           "px-3 py-2 rounded-full border",
-                          selectedLevel === option.value
+                          selectedLevels.has(option.value)
                             ? "bg-primary border-primary"
                             : "bg-background border-border"
                         )}
@@ -256,7 +347,7 @@ export default function LogsScreen() {
                         <Text
                           className={cn(
                             "text-sm font-medium",
-                            selectedLevel === option.value ? "text-white" : "text-foreground"
+                            selectedLevels.has(option.value) ? "text-white" : "text-foreground"
                           )}
                         >
                           {option.label}
@@ -276,15 +367,16 @@ export default function LogsScreen() {
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.filterScrollContent}
                   >
+                    {/* すべてボタン */}
                     <TouchableOpacity
-                      onPress={() => handleFilterSelect("device", null)}
+                      onPress={() => handleDeviceSelect(null)}
                       activeOpacity={0.7}
                       style={styles.filterButton}
                     >
                       <View
                         className={cn(
                           "px-3 py-2 rounded-full border",
-                          !selectedDevice
+                          selectedDevices.size === 0
                             ? "bg-primary border-primary"
                             : "bg-background border-border"
                         )}
@@ -292,7 +384,7 @@ export default function LogsScreen() {
                         <Text
                           className={cn(
                             "text-sm font-medium",
-                            !selectedDevice ? "text-white" : "text-foreground"
+                            selectedDevices.size === 0 ? "text-white" : "text-foreground"
                           )}
                         >
                           すべて
@@ -302,14 +394,14 @@ export default function LogsScreen() {
                     {logDeviceIds.map((device) => (
                       <TouchableOpacity
                         key={device}
-                        onPress={() => handleFilterSelect("device", device)}
+                        onPress={() => handleDeviceSelect(device)}
                         activeOpacity={0.7}
                         style={styles.filterButton}
                       >
                         <View
                           className={cn(
                             "px-3 py-2 rounded-full border",
-                            selectedDevice === device
+                            selectedDevices.has(device)
                               ? "bg-primary border-primary"
                               : "bg-background border-border"
                           )}
@@ -317,7 +409,7 @@ export default function LogsScreen() {
                           <Text
                             className={cn(
                               "text-sm font-medium",
-                              selectedDevice === device ? "text-white" : "text-foreground"
+                              selectedDevices.has(device) ? "text-white" : "text-foreground"
                             )}
                             numberOfLines={1}
                           >
@@ -352,15 +444,17 @@ export default function LogsScreen() {
     [
       state.connectionStatus,
       state.logs.length,
-      selectedType,
-      selectedLevel,
-      selectedDevice,
+      selectedTypes,
+      selectedLevels,
+      selectedDevices,
       logDeviceIds,
       filteredLogs.length,
       hasActiveFilter,
       isFilterExpanded,
       handleClearData,
-      handleFilterSelect,
+      handleTypeSelect,
+      handleLevelSelect,
+      handleDeviceSelect,
       toggleFilter,
       arrowStyle,
     ]
@@ -412,7 +506,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   accordionHeader: {
-    // TouchableOpacity styles
+    minHeight: 56,
   },
   arrowIcon: {
     fontSize: 12,
