@@ -7,25 +7,85 @@ import {
   StyleSheet,
   Platform,
   Alert,
+  ScrollView,
 } from "react-native";
 import * as Haptics from "expo-haptics";
+import Animated, {
+  useAnimatedStyle,
+  withTiming,
+  useSharedValue,
+  Easing,
+} from "react-native-reanimated";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { LocationCard } from "@/components/location-card";
 import { ConnectionStatusBadge } from "@/components/connection-status";
 import { useLocation } from "@/lib/location-store";
-import type { LocationUpdate } from "@/lib/types/location";
+import type { LocationUpdate, MovingState } from "@/lib/types/location";
 import { cn } from "@/lib/utils";
+
+// 状態フィルターオプションの定義
+const MOVING_STATES: { value: MovingState; label: string }[] = [
+  { value: "arrived", label: "到着" },
+  { value: "approaching", label: "接近中" },
+  { value: "passing", label: "通過中" },
+  { value: "moving", label: "移動中" },
+];
+
+// アコーディオンコンテンツの高さ
+const ACCORDION_CONTENT_HEIGHT_BASE = 70; // 状態フィルターのみ
+const ACCORDION_CONTENT_HEIGHT_WITH_DEVICE = 140; // 状態 + デバイスフィルター
 
 export default function TimelineScreen() {
   const { state, clearUpdates } = useLocation();
-  const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
+  // 複数選択用のSet
+  const [selectedStates, setSelectedStates] = useState<Set<MovingState>>(new Set());
+  const [selectedDevices, setSelectedDevices] = useState<Set<string>>(new Set());
+  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
 
-  // Filter updates by selected device
+  // アニメーション用の共有値
+  const rotateValue = useSharedValue(0);
+  const heightValue = useSharedValue(0);
+  const opacityValue = useSharedValue(0);
+
+  // 矢印の回転アニメーション
+  const arrowStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotate: `${rotateValue.value}deg` }],
+    };
+  });
+
+  // コンテンツの高さアニメーション
+  const contentStyle = useAnimatedStyle(() => {
+    return {
+      height: heightValue.value,
+      opacity: opacityValue.value,
+      overflow: "hidden" as const,
+    };
+  });
+
+  // デバイスフィルターがある場合は高さを増やす
+  const contentHeight = state.deviceIds.length > 0
+    ? ACCORDION_CONTENT_HEIGHT_WITH_DEVICE
+    : ACCORDION_CONTENT_HEIGHT_BASE;
+
+  // Filter updates by selected states and devices
   const filteredUpdates = useMemo(() => {
-    if (!selectedDevice) return state.updates;
-    return state.updates.filter((update) => update.device === selectedDevice);
-  }, [state.updates, selectedDevice]);
+    return state.updates.filter((update) => {
+      // 状態フィルター（空の場合は全て表示）
+      if (selectedStates.size > 0 && !selectedStates.has(update.state)) {
+        return false;
+      }
+      // デバイスフィルター（空の場合は全て表示）
+      if (selectedDevices.size > 0 && !selectedDevices.has(update.device)) {
+        return false;
+      }
+      return true;
+    });
+  }, [state.updates, selectedStates, selectedDevices]);
+
+  // フィルターが適用されているかどうか
+  const hasActiveFilter = selectedStates.size > 0 || selectedDevices.size > 0;
 
   const handleClearData = useCallback(() => {
     if (Platform.OS === "web") {
@@ -51,12 +111,66 @@ export default function TimelineScreen() {
     }
   }, [clearUpdates]);
 
-  const handleDeviceSelect = (device: string | null) => {
+  // 状態フィルターの選択/解除
+  const handleStateSelect = useCallback((value: MovingState | null) => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    setSelectedDevice(device);
-  };
+    if (value === null) {
+      // 「すべて」を選択した場合は全解除
+      setSelectedStates(new Set());
+    } else {
+      setSelectedStates((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(value)) {
+          newSet.delete(value);
+        } else {
+          newSet.add(value);
+        }
+        return newSet;
+      });
+    }
+  }, []);
+
+  // デバイスフィルターの選択/解除
+  const handleDeviceSelect = useCallback((value: string | null) => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    if (value === null) {
+      // 「すべて」を選択した場合は全解除
+      setSelectedDevices(new Set());
+    } else {
+      setSelectedDevices((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(value)) {
+          newSet.delete(value);
+        } else {
+          newSet.add(value);
+        }
+        return newSet;
+      });
+    }
+  }, []);
+
+  const toggleFilter = useCallback(() => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+
+    const newValue = !isFilterExpanded;
+    setIsFilterExpanded(newValue);
+
+    // アニメーション設定
+    const animConfig = {
+      duration: 250,
+      easing: Easing.bezier(0.4, 0, 0.2, 1),
+    };
+
+    rotateValue.value = withTiming(newValue ? 180 : 0, animConfig);
+    heightValue.value = withTiming(newValue ? contentHeight : 0, animConfig);
+    opacityValue.value = withTiming(newValue ? 1 : 0, { duration: newValue ? 250 : 150 });
+  }, [isFilterExpanded, rotateValue, heightValue, opacityValue, contentHeight]);
 
   const renderItem = useCallback(
     ({ item }: { item: LocationUpdate }) => (
@@ -78,69 +192,169 @@ export default function TimelineScreen() {
           <ConnectionStatusBadge status={state.connectionStatus} />
         </View>
 
-        {/* Device Filter */}
-        {state.deviceIds.length > 0 && (
-          <View className="mb-4">
-            <Text className="text-sm text-muted mb-2">デバイスフィルター</Text>
-            <View className="flex-row flex-wrap gap-2">
-              <TouchableOpacity
-                onPress={() => handleDeviceSelect(null)}
-                activeOpacity={0.7}
-                style={styles.filterButton}
-              >
-                <View
-                  className={cn(
-                    "px-3 py-2 rounded-full border",
-                    !selectedDevice
-                      ? "bg-primary border-primary"
-                      : "bg-surface border-border"
-                  )}
-                >
-                  <Text
-                    className={cn(
-                      "text-sm font-medium",
-                      !selectedDevice ? "text-white" : "text-foreground"
-                    )}
-                  >
-                    すべて
-                  </Text>
-                </View>
-              </TouchableOpacity>
-              {state.deviceIds.map((device) => (
-                <TouchableOpacity
-                  key={device}
-                  onPress={() => handleDeviceSelect(device)}
-                  activeOpacity={0.7}
-                  style={styles.filterButton}
-                >
-                  <View
-                    className={cn(
-                      "px-3 py-2 rounded-full border",
-                      selectedDevice === device
-                        ? "bg-primary border-primary"
-                        : "bg-surface border-border"
-                    )}
-                  >
-                    <Text
-                      className={cn(
-                        "text-sm font-medium",
-                        selectedDevice === device ? "text-white" : "text-foreground"
-                      )}
-                      numberOfLines={1}
-                    >
-                      {device}
-                    </Text>
+        {/* Filter Accordion */}
+        <View className="mb-4 bg-surface rounded-xl border border-border overflow-hidden">
+          {/* Accordion Header */}
+          <TouchableOpacity
+            onPress={toggleFilter}
+            activeOpacity={0.7}
+            style={styles.accordionHeader}
+          >
+            <View className="flex-1 flex-row items-center justify-between px-4">
+              <View className="flex-row items-center">
+                <Text className="text-base font-medium text-foreground">
+                  フィルター
+                </Text>
+                {hasActiveFilter && (
+                  <View className="ml-2 bg-primary px-2 py-0.5 rounded-full">
+                    <Text className="text-xs text-white font-medium">適用中</Text>
                   </View>
-                </TouchableOpacity>
-              ))}
+                )}
+              </View>
+              <Animated.Text style={[styles.arrowIcon, arrowStyle]}>
+                ▼
+              </Animated.Text>
             </View>
-          </View>
-        )}
+          </TouchableOpacity>
+
+          {/* Accordion Content with Animation */}
+          <Animated.View style={contentStyle}>
+            <View className="px-4 pb-4 border-t border-border">
+              {/* State Filter */}
+              <View className="mt-3">
+                <Text className="text-sm text-muted mb-2">状態</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.filterScrollContent}
+                >
+                  {/* すべてボタン */}
+                  <TouchableOpacity
+                    onPress={() => handleStateSelect(null)}
+                    activeOpacity={0.7}
+                    style={styles.filterButton}
+                  >
+                    <View
+                      className={cn(
+                        "px-3 py-2 rounded-full border",
+                        selectedStates.size === 0
+                          ? "bg-primary border-primary"
+                          : "bg-background border-border"
+                      )}
+                    >
+                      <Text
+                        className={cn(
+                          "text-sm font-medium",
+                          selectedStates.size === 0 ? "text-white" : "text-foreground"
+                        )}
+                      >
+                        すべて
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                  {MOVING_STATES.map((option) => (
+                    <TouchableOpacity
+                      key={option.value}
+                      onPress={() => handleStateSelect(option.value)}
+                      activeOpacity={0.7}
+                      style={styles.filterButton}
+                    >
+                      <View
+                        className={cn(
+                          "px-3 py-2 rounded-full border",
+                          selectedStates.has(option.value)
+                            ? "bg-primary border-primary"
+                            : "bg-background border-border"
+                        )}
+                      >
+                        <Text
+                          className={cn(
+                            "text-sm font-medium",
+                            selectedStates.has(option.value) ? "text-white" : "text-foreground"
+                          )}
+                        >
+                          {option.label}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              {/* Device Filter */}
+              {state.deviceIds.length > 0 && (
+                <View className="mt-3">
+                  <Text className="text-sm text-muted mb-2">デバイス</Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.filterScrollContent}
+                  >
+                    {/* すべてボタン */}
+                    <TouchableOpacity
+                      onPress={() => handleDeviceSelect(null)}
+                      activeOpacity={0.7}
+                      style={styles.filterButton}
+                    >
+                      <View
+                        className={cn(
+                          "px-3 py-2 rounded-full border",
+                          selectedDevices.size === 0
+                            ? "bg-primary border-primary"
+                            : "bg-background border-border"
+                        )}
+                      >
+                        <Text
+                          className={cn(
+                            "text-sm font-medium",
+                            selectedDevices.size === 0 ? "text-white" : "text-foreground"
+                          )}
+                        >
+                          すべて
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                    {state.deviceIds.map((device) => (
+                      <TouchableOpacity
+                        key={device}
+                        onPress={() => handleDeviceSelect(device)}
+                        activeOpacity={0.7}
+                        style={styles.filterButton}
+                      >
+                        <View
+                          className={cn(
+                            "px-3 py-2 rounded-full border",
+                            selectedDevices.has(device)
+                              ? "bg-primary border-primary"
+                              : "bg-background border-border"
+                          )}
+                        >
+                          <Text
+                            className={cn(
+                              "text-sm font-medium",
+                              selectedDevices.has(device) ? "text-white" : "text-foreground"
+                            )}
+                            numberOfLines={1}
+                          >
+                            {device}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+          </Animated.View>
+        </View>
 
         {/* Count info */}
         <View className="flex-row justify-between items-center">
           <Text className="text-sm text-muted">
             {filteredUpdates.length} 件の更新
+            {hasActiveFilter && (
+              <Text className="text-muted"> (全{state.updates.length}件)</Text>
+            )}
           </Text>
           {state.updates.length > 0 && (
             <TouchableOpacity onPress={handleClearData} activeOpacity={0.7}>
@@ -154,9 +368,16 @@ export default function TimelineScreen() {
       state.connectionStatus,
       state.deviceIds,
       state.updates.length,
-      selectedDevice,
+      selectedStates,
+      selectedDevices,
       filteredUpdates.length,
+      hasActiveFilter,
       handleClearData,
+      handleStateSelect,
+      handleDeviceSelect,
+      toggleFilter,
+      arrowStyle,
+      contentStyle,
     ]
   );
 
@@ -165,14 +386,18 @@ export default function TimelineScreen() {
       <View className="flex-1 items-center justify-center py-20">
         <Text className="text-6xl mb-4">📍</Text>
         <Text className="text-lg font-semibold text-foreground mb-2">
-          データがありません
+          {hasActiveFilter
+            ? "条件に一致するデータがありません"
+            : "データがありません"}
         </Text>
         <Text className="text-sm text-muted text-center px-8">
-          WebSocketに接続して位置情報データを受信してください
+          {hasActiveFilter
+            ? "フィルター条件を変更してください"
+            : "WebSocketに接続して位置情報データを受信してください"}
         </Text>
       </View>
     ),
-    []
+    [hasActiveFilter]
   );
 
   return (
@@ -195,7 +420,18 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 100,
   },
+  filterScrollContent: {
+    gap: 8,
+  },
   filterButton: {
     marginBottom: 4,
+  },
+  accordionHeader: {
+    minHeight: 56,
+    justifyContent: "center",
+  },
+  arrowIcon: {
+    fontSize: 12,
+    color: "#687076",
   },
 });
