@@ -1,33 +1,24 @@
+import { useEffect } from "react";
 import {
   ScrollView,
   Text,
   View,
-  TouchableOpacity,
   StyleSheet,
-  Platform,
 } from "react-native";
-import * as Haptics from "expo-haptics";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { ConnectionStatusBadge } from "@/components/connection-status";
 import { useLocation } from "@/lib/location-store";
 
 export default function HomeScreen() {
-  const { state, connect, disconnect } = useLocation();
+  const { state, connect } = useLocation();
 
-  const handleConnect = () => {
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    if (state.connectionStatus === "connected" || state.connectionStatus === "connecting") {
-      disconnect();
-    } else {
+  // アプリ起動時に自動でWebSocket接続を開始
+  useEffect(() => {
+    if (state.connectionStatus === "disconnected") {
       connect();
     }
-  };
-
-  const isConnected = state.connectionStatus === "connected" || state.connectionStatus === "connecting";
-  const buttonLabel = isConnected ? "切断" : "接続";
+  }, []);
 
   const formatLastUpdate = () => {
     if (state.updates.length === 0) return "-";
@@ -53,29 +44,10 @@ export default function HomeScreen() {
 
           {/* Connection Status Card */}
           <View className="bg-surface rounded-2xl p-5 border border-border">
-            <View className="flex-row justify-between items-center mb-4">
+            <View className="flex-row justify-between items-center">
               <Text className="text-lg font-semibold text-foreground">接続ステータス</Text>
               <ConnectionStatusBadge status={state.connectionStatus} />
             </View>
-
-            {/* Server Info */}
-            <View className="mb-4 p-3 bg-background rounded-lg">
-              <Text className="text-xs text-muted mb-1">接続先</Text>
-              <Text className="text-sm text-foreground" numberOfLines={1}>
-                analytics-internal.trainlcd.app
-              </Text>
-            </View>
-
-            {/* Connect Button */}
-            <TouchableOpacity
-              className={`py-3 rounded-xl ${isConnected ? "bg-error" : "bg-primary"}`}
-              onPress={handleConnect}
-              activeOpacity={0.8}
-            >
-              <Text className="text-center text-white font-semibold text-base">
-                {buttonLabel}
-              </Text>
-            </TouchableOpacity>
 
             {/* Error Message */}
             {state.error && (
