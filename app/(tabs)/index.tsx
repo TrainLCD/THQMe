@@ -5,6 +5,7 @@ import {
   View,
   StyleSheet,
 } from "react-native";
+import { Image } from "expo-image";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { ConnectionStatusBadge } from "@/components/connection-status";
@@ -35,11 +36,12 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View className="flex-1 gap-6">
           {/* Header */}
-          <View className="items-center gap-2">
-            <Text className="text-3xl font-bold text-foreground">THQMe</Text>
-            <Text className="text-base text-muted text-center">
-              TrainLCD位置情報モニター
-            </Text>
+          <View className="items-center">
+            <Image
+              source={require("@/assets/images/icon.png")}
+              style={styles.appIcon}
+              contentFit="contain"
+            />
           </View>
 
           {/* Connection Status Card */}
@@ -131,5 +133,10 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
+  },
+  appIcon: {
+    width: 120,
+    height: 120,
+    borderRadius: 24,
   },
 });
