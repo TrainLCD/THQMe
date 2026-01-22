@@ -135,8 +135,8 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   appIcon: {
-    width: 80,
-    height: 96,
-    borderRadius: 16,
+    width: 40,
+    height: 48,
+    borderRadius: 8,
   },
 });
