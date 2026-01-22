@@ -1,27 +1,28 @@
 import { View, Text } from "react-native";
 import type { LogData } from "@/lib/types/location";
 import { cn } from "@/lib/utils";
+import { useColors } from "@/hooks/use-colors";
 
 interface LogCardProps {
   log: LogData;
 }
 
-const levelConfig: Record<string, { label: string; bgClass: string; textClass: string; borderClass: string }> = {
-  info: { label: "INFO", bgClass: "bg-primary/20", textClass: "text-primary", borderClass: "border-primary" },
-  warn: { label: "WARN", bgClass: "bg-warning/20", textClass: "text-warning", borderClass: "border-warning" },
-  warning: { label: "WARN", bgClass: "bg-warning/20", textClass: "text-warning", borderClass: "border-warning" },
-  error: { label: "ERROR", bgClass: "bg-error/20", textClass: "text-error", borderClass: "border-error" },
-  debug: { label: "DEBUG", bgClass: "bg-muted/20", textClass: "text-muted", borderClass: "border-muted" },
+const levelConfig: Record<string, { label: string; bgClass: string; textClass: string; colorKey: string }> = {
+  info: { label: "INFO", bgClass: "bg-primary/20", textClass: "text-primary", colorKey: "primary" },
+  warn: { label: "WARN", bgClass: "bg-warning/20", textClass: "text-warning", colorKey: "warning" },
+  warning: { label: "WARN", bgClass: "bg-warning/20", textClass: "text-warning", colorKey: "warning" },
+  error: { label: "ERROR", bgClass: "bg-error/20", textClass: "text-error", colorKey: "error" },
+  debug: { label: "DEBUG", bgClass: "bg-muted/20", textClass: "text-muted", colorKey: "muted" },
 };
 
-const logTypeConfig: Record<string, { label: string; bgClass: string; textClass: string; borderClass: string }> = {
-  app: { label: "APP", bgClass: "bg-success/20", textClass: "text-success", borderClass: "border-success" },
-  system: { label: "SYSTEM", bgClass: "bg-warning/20", textClass: "text-warning", borderClass: "border-warning" },
-  client: { label: "CLIENT", bgClass: "bg-primary/20", textClass: "text-primary", borderClass: "border-primary" },
+const logTypeConfig: Record<string, { label: string; bgClass: string; textClass: string; colorKey: string }> = {
+  app: { label: "APP", bgClass: "bg-success/20", textClass: "text-success", colorKey: "success" },
+  system: { label: "SYSTEM", bgClass: "bg-warning/20", textClass: "text-warning", colorKey: "warning" },
+  client: { label: "CLIENT", bgClass: "bg-primary/20", textClass: "text-primary", colorKey: "primary" },
 };
 
-const defaultLevelConfig = { label: "LOG", bgClass: "bg-muted/20", textClass: "text-muted", borderClass: "border-muted" };
-const defaultLogTypeConfig = { label: "OTHER", bgClass: "bg-muted/20", textClass: "text-muted", borderClass: "border-muted" };
+const defaultLevelConfig = { label: "LOG", bgClass: "bg-muted/20", textClass: "text-muted", colorKey: "muted" };
+const defaultLogTypeConfig = { label: "OTHER", bgClass: "bg-muted/20", textClass: "text-muted", colorKey: "muted" };
 
 function formatDate(timestamp: number): string {
   const date = new Date(timestamp);
@@ -41,11 +42,15 @@ function formatTimestamp(timestamp: number): string {
 }
 
 export function LogCard({ log }: LogCardProps) {
+  const colors = useColors();
   const level = log.log?.level || "info";
   const levelConf = levelConfig[level] || defaultLevelConfig;
   const message = log.log?.message || "(no message)";
   const logType = log.log?.type || "";
   const logTypeConf = logTypeConfig[logType] || defaultLogTypeConfig;
+  
+  const levelBorderColor = colors[levelConf.colorKey as keyof typeof colors];
+  const typeBorderColor = colors[logTypeConf.colorKey as keyof typeof colors];
 
   return (
     <View className="bg-surface rounded-xl p-4 border border-border">
@@ -87,13 +92,19 @@ export function LogCard({ log }: LogCardProps) {
 
       {/* Level and Type Badges */}
       <View className="flex-row gap-2">
-        <View className={cn("px-3 py-1 rounded-full border", levelConf.bgClass, levelConf.borderClass)}>
+        <View 
+          className={cn("px-3 py-1 rounded-full", levelConf.bgClass)}
+          style={{ borderWidth: 1, borderColor: levelBorderColor }}
+        >
           <Text className={cn("text-sm font-medium", levelConf.textClass)}>
             ● {levelConf.label}
           </Text>
         </View>
         {logType && (
-          <View className={cn("px-3 py-1 rounded-full border", logTypeConf.bgClass, logTypeConf.borderClass)}>
+          <View 
+            className={cn("px-3 py-1 rounded-full", logTypeConf.bgClass)}
+            style={{ borderWidth: 1, borderColor: typeBorderColor }}
+          >
             <Text className={cn("text-sm font-medium", logTypeConf.textClass)}>
               {logTypeConf.label}
             </Text>

@@ -1,20 +1,21 @@
-import { View, Text } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import type { LocationUpdate, MovingState } from "@/lib/types/location";
 import { cn } from "@/lib/utils";
+import { useColors } from "@/hooks/use-colors";
 
 interface LocationCardProps {
   update: LocationUpdate;
 }
 
-const stateConfig: Record<MovingState, { label: string; bgClass: string; textClass: string; borderClass: string }> = {
-  arrived: { label: "到着", bgClass: "bg-success/20", textClass: "text-success", borderClass: "border-success" },
-  approaching: { label: "接近中", bgClass: "bg-warning/20", textClass: "text-warning", borderClass: "border-warning" },
-  passing: { label: "通過中", bgClass: "bg-primary/20", textClass: "text-primary", borderClass: "border-primary" },
-  moving: { label: "移動中", bgClass: "bg-muted/20", textClass: "text-muted", borderClass: "border-muted" },
+const stateConfig: Record<MovingState, { label: string; bgClass: string; textClass: string; colorKey: keyof ReturnType<typeof useColors> }> = {
+  arrived: { label: "到着", bgClass: "bg-success/20", textClass: "text-success", colorKey: "success" },
+  approaching: { label: "接近中", bgClass: "bg-warning/20", textClass: "text-warning", colorKey: "warning" },
+  passing: { label: "通過中", bgClass: "bg-primary/20", textClass: "text-primary", colorKey: "primary" },
+  moving: { label: "移動中", bgClass: "bg-muted/20", textClass: "text-muted", colorKey: "muted" },
 };
 
 // 未知のstate値に対するフォールバック
-const defaultStateConfig = { label: "不明", bgClass: "bg-muted/20", textClass: "text-muted", borderClass: "border-muted" };
+const defaultStateConfig = { label: "不明", bgClass: "bg-muted/20", textClass: "text-muted", colorKey: "muted" as const };
 
 function formatCoordinate(value: number, type: "lat" | "lng"): string {
   const abs = Math.abs(value);
@@ -54,9 +55,11 @@ function formatAccuracy(accuracy: number | null | undefined): string {
 }
 
 export function LocationCard({ update }: LocationCardProps) {
+  const colors = useColors();
   // stateConfigに存在しない値の場合はフォールバックを使用
   const stateConf = stateConfig[update.state as MovingState] || defaultStateConfig;
   const stateLabel = stateConf.label === "不明" && update.state ? String(update.state) : stateConf.label;
+  const borderColor = colors[stateConf.colorKey];
 
   return (
     <View className="bg-surface rounded-xl p-4 border border-border">
@@ -111,7 +114,10 @@ export function LocationCard({ update }: LocationCardProps) {
 
       {/* State Badge */}
       <View className="flex-row">
-        <View className={cn("px-3 py-1 rounded-full border", stateConf.bgClass, stateConf.borderClass)}>
+        <View 
+          className={cn("px-3 py-1 rounded-full", stateConf.bgClass)}
+          style={{ borderWidth: 1, borderColor }}
+        >
           <Text className={cn("text-sm font-medium", stateConf.textClass)}>
             ● {stateLabel}
           </Text>
