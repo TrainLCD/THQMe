@@ -12,7 +12,7 @@ const WS_URL = "wss://analytics-internal.trainlcd.app/ws";
 const WS_PROTOCOLS = ["thq", "thq-auth-8d4f609889f3a67352d52b46cc1e71e9c3d89fd0fea765af45ee0f5249c9a388"];
 
 const MAX_UPDATES = 500; // 保持する最大更新数
-const MAX_LOGS = 200; // 保持する最大ログ数
+const MAX_LOGS = 500; // 保持する最大ログ数
 
 // 自動再接続設定
 const RECONNECT_INITIAL_DELAY = 1000; // 初回再接続待機時間（1秒）
