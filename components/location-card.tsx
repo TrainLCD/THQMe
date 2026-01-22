@@ -12,6 +12,9 @@ const stateConfig: Record<MovingState, { label: string; bgClass: string; textCla
   unknown: { label: "不明", bgClass: "bg-warning/20", textClass: "text-warning" },
 };
 
+// 未知のstate値に対するフォールバック
+const defaultStateConfig = { label: "不明", bgClass: "bg-muted/20", textClass: "text-muted" };
+
 function formatCoordinate(value: number, type: "lat" | "lng"): string {
   const abs = Math.abs(value);
   const direction = type === "lat" ? (value >= 0 ? "N" : "S") : value >= 0 ? "E" : "W";
@@ -42,7 +45,9 @@ function formatAccuracy(accuracy: number | null | undefined): string {
 }
 
 export function LocationCard({ update }: LocationCardProps) {
-  const stateConf = stateConfig[update.state];
+  // stateConfigに存在しない値の場合はフォールバックを使用
+  const stateConf = stateConfig[update.state as MovingState] || defaultStateConfig;
+  const stateLabel = stateConf.label === "不明" && update.state ? String(update.state) : stateConf.label;
 
   return (
     <View className="bg-surface rounded-xl p-4 border border-border">
@@ -91,7 +96,7 @@ export function LocationCard({ update }: LocationCardProps) {
       <View className="flex-row">
         <View className={cn("px-3 py-1 rounded-full", stateConf.bgClass)}>
           <Text className={cn("text-sm font-medium", stateConf.textClass)}>
-            ● {stateConf.label}
+            ● {stateLabel}
           </Text>
         </View>
       </View>
