@@ -6,15 +6,15 @@ interface LocationCardProps {
   update: LocationUpdate;
 }
 
-const stateConfig: Record<MovingState, { label: string; bgClass: string; textClass: string }> = {
-  arrived: { label: "到着", bgClass: "bg-success/20", textClass: "text-success" },
-  approaching: { label: "接近中", bgClass: "bg-warning/20", textClass: "text-warning" },
-  passing: { label: "通過中", bgClass: "bg-primary/20", textClass: "text-primary" },
-  moving: { label: "移動中", bgClass: "bg-muted/20", textClass: "text-muted" },
+const stateConfig: Record<MovingState, { label: string; bgClass: string; textClass: string; borderClass: string }> = {
+  arrived: { label: "到着", bgClass: "bg-success/20", textClass: "text-success", borderClass: "border-success" },
+  approaching: { label: "接近中", bgClass: "bg-warning/20", textClass: "text-warning", borderClass: "border-warning" },
+  passing: { label: "通過中", bgClass: "bg-primary/20", textClass: "text-primary", borderClass: "border-primary" },
+  moving: { label: "移動中", bgClass: "bg-muted/20", textClass: "text-muted", borderClass: "border-muted" },
 };
 
 // 未知のstate値に対するフォールバック
-const defaultStateConfig = { label: "不明", bgClass: "bg-muted/20", textClass: "text-muted" };
+const defaultStateConfig = { label: "不明", bgClass: "bg-muted/20", textClass: "text-muted", borderClass: "border-muted" };
 
 function formatCoordinate(value: number, type: "lat" | "lng"): string {
   const abs = Math.abs(value);
@@ -111,7 +111,7 @@ export function LocationCard({ update }: LocationCardProps) {
 
       {/* State Badge */}
       <View className="flex-row">
-        <View className={cn("px-3 py-1 rounded-full", stateConf.bgClass)}>
+        <View className={cn("px-3 py-1 rounded-full border", stateConf.bgClass, stateConf.borderClass)}>
           <Text className={cn("text-sm font-medium", stateConf.textClass)}>
             ● {stateLabel}
           </Text>

@@ -6,22 +6,22 @@ interface LogCardProps {
   log: LogData;
 }
 
-const levelConfig: Record<string, { label: string; bgClass: string; textClass: string }> = {
-  info: { label: "INFO", bgClass: "bg-primary/20", textClass: "text-primary" },
-  warn: { label: "WARN", bgClass: "bg-warning/20", textClass: "text-warning" },
-  warning: { label: "WARN", bgClass: "bg-warning/20", textClass: "text-warning" },
-  error: { label: "ERROR", bgClass: "bg-error/20", textClass: "text-error" },
-  debug: { label: "DEBUG", bgClass: "bg-muted/20", textClass: "text-muted" },
+const levelConfig: Record<string, { label: string; bgClass: string; textClass: string; borderClass: string }> = {
+  info: { label: "INFO", bgClass: "bg-primary/20", textClass: "text-primary", borderClass: "border-primary" },
+  warn: { label: "WARN", bgClass: "bg-warning/20", textClass: "text-warning", borderClass: "border-warning" },
+  warning: { label: "WARN", bgClass: "bg-warning/20", textClass: "text-warning", borderClass: "border-warning" },
+  error: { label: "ERROR", bgClass: "bg-error/20", textClass: "text-error", borderClass: "border-error" },
+  debug: { label: "DEBUG", bgClass: "bg-muted/20", textClass: "text-muted", borderClass: "border-muted" },
 };
 
-const logTypeConfig: Record<string, { label: string; bgClass: string; textClass: string }> = {
-  app: { label: "APP", bgClass: "bg-success/20", textClass: "text-success" },
-  system: { label: "SYSTEM", bgClass: "bg-warning/20", textClass: "text-warning" },
-  client: { label: "CLIENT", bgClass: "bg-primary/20", textClass: "text-primary" },
+const logTypeConfig: Record<string, { label: string; bgClass: string; textClass: string; borderClass: string }> = {
+  app: { label: "APP", bgClass: "bg-success/20", textClass: "text-success", borderClass: "border-success" },
+  system: { label: "SYSTEM", bgClass: "bg-warning/20", textClass: "text-warning", borderClass: "border-warning" },
+  client: { label: "CLIENT", bgClass: "bg-primary/20", textClass: "text-primary", borderClass: "border-primary" },
 };
 
-const defaultLevelConfig = { label: "LOG", bgClass: "bg-muted/20", textClass: "text-muted" };
-const defaultLogTypeConfig = { label: "OTHER", bgClass: "bg-muted/20", textClass: "text-muted" };
+const defaultLevelConfig = { label: "LOG", bgClass: "bg-muted/20", textClass: "text-muted", borderClass: "border-muted" };
+const defaultLogTypeConfig = { label: "OTHER", bgClass: "bg-muted/20", textClass: "text-muted", borderClass: "border-muted" };
 
 function formatDate(timestamp: number): string {
   const date = new Date(timestamp);
@@ -87,13 +87,13 @@ export function LogCard({ log }: LogCardProps) {
 
       {/* Level and Type Badges */}
       <View className="flex-row gap-2">
-        <View className={cn("px-3 py-1 rounded-full", levelConf.bgClass)}>
+        <View className={cn("px-3 py-1 rounded-full border", levelConf.bgClass, levelConf.borderClass)}>
           <Text className={cn("text-sm font-medium", levelConf.textClass)}>
             ● {levelConf.label}
           </Text>
         </View>
         {logType && (
-          <View className={cn("px-3 py-1 rounded-full", logTypeConf.bgClass)}>
+          <View className={cn("px-3 py-1 rounded-full border", logTypeConf.bgClass, logTypeConf.borderClass)}>
             <Text className={cn("text-sm font-medium", logTypeConf.textClass)}>
               {logTypeConf.label}
             </Text>
