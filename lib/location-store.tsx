@@ -3,6 +3,7 @@ import type {
   LocationState,
   LocationAction,
   LocationUpdate,
+  LogData,
   ConnectionStatus,
 } from "./types/location";
 
@@ -11,9 +12,11 @@ const WS_URL = "wss://analytics-internal.trainlcd.app/ws";
 const WS_PROTOCOLS = ["thq", "thq-auth-8d4f609889f3a67352d52b46cc1e71e9c3d89fd0fea765af45ee0f5249c9a388"];
 
 const MAX_UPDATES = 500; // 保持する最大更新数
+const MAX_LOGS = 200; // 保持する最大ログ数
 
 const initialState: LocationState = {
   updates: [],
+  logs: [],
   connectionStatus: "disconnected",
   wsUrl: WS_URL,
   error: null,
@@ -36,6 +39,14 @@ function locationReducer(state: LocationState, action: LocationAction): Location
         deviceIds,
       };
     }
+    case "ADD_LOG": {
+      const log = action.payload;
+      const newLogs = [log, ...state.logs].slice(0, MAX_LOGS);
+      return {
+        ...state,
+        logs: newLogs,
+      };
+    }
     case "SET_CONNECTION_STATUS":
       return { ...state, connectionStatus: action.payload };
     case "SET_WS_URL":
@@ -43,7 +54,7 @@ function locationReducer(state: LocationState, action: LocationAction): Location
     case "SET_ERROR":
       return { ...state, error: action.payload };
     case "CLEAR_UPDATES":
-      return { ...state, updates: [], messageCount: 0, deviceIds: [] };
+      return { ...state, updates: [], logs: [], messageCount: 0, deviceIds: [] };
     case "LOAD_INITIAL_STATE":
       return { ...state, ...action.payload };
     default:
@@ -99,6 +110,9 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
           if (data.type === "location_update") {
             console.log("[WebSocket] Location update from device:", data.device, "coords:", data.coords);
             dispatch({ type: "ADD_UPDATE", payload: data as LocationUpdate });
+          } else if (data.type === "log") {
+            console.log("[WebSocket] Log message:", data.message);
+            dispatch({ type: "ADD_LOG", payload: data as LogData });
           } else {
             console.log("[WebSocket] Unknown message type:", data.type);
           }

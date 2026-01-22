@@ -30,6 +30,18 @@ export interface LocationUpdate {
 }
 
 /**
+ * WebSocket経由で受信するログデータ
+ */
+export interface LogData {
+  device: string | null | undefined;
+  id: string | null | undefined;
+  level: string | null | undefined;
+  message: string | null | undefined;
+  timestamp: number;
+  type: "log";
+}
+
+/**
  * WebSocket接続状態
  */
 export type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error";
@@ -39,6 +51,7 @@ export type ConnectionStatus = "disconnected" | "connecting" | "connected" | "er
  */
 export interface LocationState {
   updates: LocationUpdate[];
+  logs: LogData[];
   connectionStatus: ConnectionStatus;
   wsUrl: string;
   error: string | null;
@@ -51,6 +64,7 @@ export interface LocationState {
  */
 export type LocationAction =
   | { type: "ADD_UPDATE"; payload: LocationUpdate }
+  | { type: "ADD_LOG"; payload: LogData }
   | { type: "SET_CONNECTION_STATUS"; payload: ConnectionStatus }
   | { type: "SET_WS_URL"; payload: string }
   | { type: "SET_ERROR"; payload: string | null }

@@ -20,6 +20,7 @@ const MAPPING = {
   "chevron.right": "chevron-right",
   "clock.fill": "schedule",
   "location.fill": "location-on",
+  "doc.text.fill": "article",
 } as IconMapping;
 
 /**

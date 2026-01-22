@@ -3,6 +3,7 @@ import type {
   LocationUpdate,
   LocationState,
   LocationAction,
+  LogData,
   MovingState,
   ConnectionStatus,
 } from "../types/location";
@@ -10,6 +11,7 @@ import type {
 // Reducer logic extracted for testing
 function locationReducer(state: LocationState, action: LocationAction): LocationState {
   const MAX_UPDATES = 500;
+  const MAX_LOGS = 200;
   
   switch (action.type) {
     case "ADD_UPDATE": {
@@ -25,6 +27,14 @@ function locationReducer(state: LocationState, action: LocationAction): Location
         deviceIds,
       };
     }
+    case "ADD_LOG": {
+      const log = action.payload;
+      const newLogs = [log, ...state.logs].slice(0, MAX_LOGS);
+      return {
+        ...state,
+        logs: newLogs,
+      };
+    }
     case "SET_CONNECTION_STATUS":
       return { ...state, connectionStatus: action.payload };
     case "SET_WS_URL":
@@ -32,7 +42,7 @@ function locationReducer(state: LocationState, action: LocationAction): Location
     case "SET_ERROR":
       return { ...state, error: action.payload };
     case "CLEAR_UPDATES":
-      return { ...state, updates: [], messageCount: 0, deviceIds: [] };
+      return { ...state, updates: [], logs: [], messageCount: 0, deviceIds: [] };
     case "LOAD_INITIAL_STATE":
       return { ...state, ...action.payload };
     default:
@@ -42,6 +52,7 @@ function locationReducer(state: LocationState, action: LocationAction): Location
 
 const initialState: LocationState = {
   updates: [],
+  logs: [],
   connectionStatus: "disconnected",
   wsUrl: "",
   error: null,
@@ -61,6 +72,16 @@ const createMockUpdate = (overrides: Partial<LocationUpdate> = {}): LocationUpda
   state: "moving" as MovingState,
   timestamp: Date.now(),
   type: "location_update",
+  ...overrides,
+});
+
+const createMockLog = (overrides: Partial<LogData> = {}): LogData => ({
+  device: "test-device",
+  id: `log-${Date.now()}`,
+  level: "info",
+  message: "Test log message",
+  timestamp: Date.now(),
+  type: "log",
   ...overrides,
 });
 
@@ -121,6 +142,53 @@ describe("Location Store Reducer", () => {
     });
   });
 
+  describe("ADD_LOG", () => {
+    it("should add a new log to the beginning of the list", () => {
+      const log = createMockLog({ id: "log-1" });
+      const action: LocationAction = { type: "ADD_LOG", payload: log };
+      
+      const newState = locationReducer(initialState, action);
+      
+      expect(newState.logs).toHaveLength(1);
+      expect(newState.logs[0]).toEqual(log);
+    });
+
+    it("should limit logs to MAX_LOGS (200)", () => {
+      const existingLogs = Array.from({ length: 200 }, (_, i) =>
+        createMockLog({ id: `existing-log-${i}` })
+      );
+      const stateWithManyLogs: LocationState = {
+        ...initialState,
+        logs: existingLogs,
+      };
+      
+      const newLog = createMockLog({ id: "new-log" });
+      const action: LocationAction = { type: "ADD_LOG", payload: newLog };
+      
+      const newState = locationReducer(stateWithManyLogs, action);
+      
+      expect(newState.logs).toHaveLength(200);
+      expect(newState.logs[0].id).toBe("new-log");
+    });
+
+    it("should handle nullable fields in log", () => {
+      const log = createMockLog({
+        device: null,
+        id: null,
+        level: null,
+        message: null,
+      });
+      const action: LocationAction = { type: "ADD_LOG", payload: log };
+      
+      const newState = locationReducer(initialState, action);
+      
+      expect(newState.logs[0].device).toBeNull();
+      expect(newState.logs[0].id).toBeNull();
+      expect(newState.logs[0].level).toBeNull();
+      expect(newState.logs[0].message).toBeNull();
+    });
+  });
+
   describe("SET_CONNECTION_STATUS", () => {
     it("should update connection status", () => {
       const statuses: ConnectionStatus[] = ["connecting", "connected", "disconnected", "error"];
@@ -168,10 +236,11 @@ describe("Location Store Reducer", () => {
   });
 
   describe("CLEAR_UPDATES", () => {
-    it("should clear all updates and reset counters", () => {
+    it("should clear all updates, logs and reset counters", () => {
       const stateWithData: LocationState = {
         ...initialState,
         updates: [createMockUpdate(), createMockUpdate()],
+        logs: [createMockLog(), createMockLog()],
         messageCount: 100,
         deviceIds: ["device-a", "device-b"],
       };
@@ -180,6 +249,7 @@ describe("Location Store Reducer", () => {
       const newState = locationReducer(stateWithData, action);
       
       expect(newState.updates).toHaveLength(0);
+      expect(newState.logs).toHaveLength(0);
       expect(newState.messageCount).toBe(0);
       expect(newState.deviceIds).toHaveLength(0);
     });
@@ -238,5 +308,19 @@ describe("LocationUpdate type validation", () => {
     });
     
     expect(update.coords.speed).toBe(-1);
+  });
+});
+
+describe("LogData type validation", () => {
+  it("should have correct structure", () => {
+    const log = createMockLog();
+    
+    expect(log).toHaveProperty("device");
+    expect(log).toHaveProperty("id");
+    expect(log).toHaveProperty("level");
+    expect(log).toHaveProperty("message");
+    expect(log).toHaveProperty("timestamp");
+    expect(log).toHaveProperty("type");
+    expect(log.type).toBe("log");
   });
 });
