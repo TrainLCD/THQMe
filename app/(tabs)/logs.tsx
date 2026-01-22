@@ -262,8 +262,8 @@ export default function LogsScreen() {
             onChangeText={setSearchQuery}
             placeholder="メッセージを検索..."
             placeholderTextColor={colors.muted}
-            className="flex-1 py-4 text-foreground"
-            style={{ fontSize: 16 }}
+            className="flex-1 text-foreground"
+            style={{ fontSize: 16, paddingVertical: 16 }}
             returnKeyType="search"
             autoCapitalize="none"
             autoCorrect={false}
