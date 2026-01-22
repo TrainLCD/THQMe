@@ -489,7 +489,7 @@ export default function LogsScreen() {
   const ListEmpty = useMemo(
     () => (
       <View className="flex-1 items-center justify-center py-20">
-        <Text className="text-6xl mb-4">📝</Text>
+        <Text style={{ fontSize: 64, lineHeight: 80 }} className="mb-4">📝</Text>
         <Text className="text-lg font-semibold text-foreground mb-2">
           {hasActiveFilter
             ? "条件に一致するログがありません"
