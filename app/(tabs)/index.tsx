@@ -39,7 +39,7 @@ export default function HomeScreen() {
           {/* Header */}
           <View className="items-center">
             <Image
-              source={require("@/assets/images/icon.png")}
+              source={require("@/assets/images/header-icon.png")}
               style={styles.appIcon}
               contentFit="contain"
             />
