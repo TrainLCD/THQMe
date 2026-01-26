@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text } from "react-native";
 import type { LocationUpdate, MovingState } from "@/lib/types/location";
 import { cn } from "@/lib/utils";
 import { useColors } from "@/hooks/use-colors";

@@ -14,11 +14,12 @@ import { useLocation } from "@/lib/location-store";
 export default function HomeScreen() {
   const { state, connect } = useLocation();
 
-  // アプリ起動時に自動でWebSocket接続を開始
+  // アプリ起動時に自動でWebSocket接続を開始（初回マウント時のみ）
   useEffect(() => {
     if (state.connectionStatus === "disconnected") {
       connect();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const formatLastUpdate = () => {
