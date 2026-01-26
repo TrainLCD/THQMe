@@ -35,8 +35,8 @@ const MOVING_STATES: { value: MovingState; label: string }[] = [
 ];
 
 // アコーディオンコンテンツの高さ
-const ACCORDION_CONTENT_HEIGHT_BASE = 90; // 状態フィルターのみ
-const ACCORDION_CONTENT_HEIGHT_WITH_DEVICE = 170; // 状態 + デバイスフィルター
+const ACCORDION_CONTENT_HEIGHT_BASE = 80; // 状態フィルターのみ
+const ACCORDION_CONTENT_HEIGHT_WITH_DEVICE = 150; // 状態 + デバイスフィルター
 
 export default function TimelineScreen() {
   const { state, clearUpdates } = useLocation();
@@ -323,8 +323,9 @@ export default function TimelineScreen() {
                 </ScrollView>
               </View>
 
-              {/* Device Filter */}
-              <View className="mt-3">
+              {/* Device Filter (only show if there are devices) */}
+              {state.deviceIds.length > 0 && (
+                <View className="mt-3">
                   <Text className="text-sm text-muted mb-2">デバイス</Text>
                   <ScrollView
                     horizontal
@@ -355,39 +356,36 @@ export default function TimelineScreen() {
                         </Text>
                       </View>
                     </TouchableOpacity>
-                    {state.deviceIds.length > 0 ? (
-                      state.deviceIds.map((device) => (
-                        <TouchableOpacity
-                          key={device}
-                          onPress={() => handleDeviceSelect(device)}
-                          activeOpacity={0.7}
-                          style={styles.filterButton}
+                    {state.deviceIds.map((device) => (
+                      <TouchableOpacity
+                        key={device}
+                        onPress={() => handleDeviceSelect(device)}
+                        activeOpacity={0.7}
+                        style={styles.filterButton}
+                      >
+                        <View
+                          className={cn(
+                            "px-3 py-2 rounded-full border",
+                            selectedDevices.has(device)
+                              ? "bg-primary border-primary"
+                              : "bg-background border-border"
+                          )}
                         >
-                          <View
+                          <Text
                             className={cn(
-                              "px-3 py-2 rounded-full border",
-                              selectedDevices.has(device)
-                                ? "bg-primary border-primary"
-                                : "bg-background border-border"
+                              "text-sm font-medium",
+                              selectedDevices.has(device) ? "text-white" : "text-foreground"
                             )}
+                            numberOfLines={1}
                           >
-                            <Text
-                              className={cn(
-                                "text-sm font-medium",
-                                selectedDevices.has(device) ? "text-white" : "text-foreground"
-                              )}
-                              numberOfLines={1}
-                            >
-                              {device}
-                            </Text>
-                          </View>
-                        </TouchableOpacity>
-                      ))
-                    ) : (
-                      <Text className="text-sm text-muted py-2">接続待ち...</Text>
-                    )}
+                            {device}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
                   </ScrollView>
                 </View>
+              )}
             </View>
           </Animated.View>
         </View>
