@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { View, Text } from "react-native";
 import type { LogData } from "@/lib/types/location";
 import { cn } from "@/lib/utils";
@@ -41,7 +42,7 @@ function formatTimestamp(timestamp: number): string {
   });
 }
 
-export function LogCard({ log }: LogCardProps) {
+export const LogCard = memo(function LogCard({ log }: LogCardProps) {
   const colors = useColors();
   const level = log.log?.level || "info";
   const levelConf = levelConfig[level] || defaultLevelConfig;
@@ -113,4 +114,4 @@ export function LogCard({ log }: LogCardProps) {
       </View>
     </View>
   );
-}
+});

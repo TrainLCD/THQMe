@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { View, Text } from "react-native";
 import type { LocationUpdate, MovingState } from "@/lib/types/location";
 import { cn } from "@/lib/utils";
@@ -56,7 +57,7 @@ function formatAccuracy(accuracy: number | null | undefined): string {
   return `${accuracy.toFixed(0)}m`;
 }
 
-export function LocationCard({ update }: LocationCardProps) {
+export const LocationCard = memo(function LocationCard({ update }: LocationCardProps) {
   const colors = useColors();
   // stateConfigに存在しない値の場合はフォールバックを使用
   const stateConf = stateConfig[update.state as MovingState] || defaultStateConfig;
@@ -127,4 +128,4 @@ export function LocationCard({ update }: LocationCardProps) {
       </View>
     </View>
   );
-}
+});

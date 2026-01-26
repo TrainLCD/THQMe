@@ -559,6 +559,12 @@ export default function LogsScreen() {
         ListEmptyComponent={ListEmpty}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        // パフォーマンス最適化
+        initialNumToRender={10}
+        maxToRenderPerBatch={5}
+        windowSize={5}
+        removeClippedSubviews={Platform.OS !== "web"}
+        updateCellsBatchingPeriod={50}
       />
     </ScreenContainer>
   );
