@@ -26,18 +26,12 @@ import type { LocationUpdate, MovingState } from "@/lib/types/location";
 import { cn } from "@/lib/utils";
 import { useColors } from "@/hooks/use-colors";
 
-// 状態フィルターオプションの定義（LocationCardのstateConfigと配色を一致）
-const MOVING_STATES: {
-  value: MovingState;
-  label: string;
-  selectedBgClass: string;
-  selectedBorderClass: string;
-  selectedTextClass: string;
-}[] = [
-  { value: "arrived", label: "到着", selectedBgClass: "bg-success", selectedBorderClass: "border-success", selectedTextClass: "text-white" },
-  { value: "approaching", label: "接近中", selectedBgClass: "bg-warning", selectedBorderClass: "border-warning", selectedTextClass: "text-black" },
-  { value: "passing", label: "通過中", selectedBgClass: "bg-primary", selectedBorderClass: "border-primary", selectedTextClass: "text-white" },
-  { value: "moving", label: "移動中", selectedBgClass: "bg-muted", selectedBorderClass: "border-muted", selectedTextClass: "text-white" },
+// 状態フィルターオプションの定義
+const MOVING_STATES: { value: MovingState; label: string }[] = [
+  { value: "arrived", label: "到着" },
+  { value: "approaching", label: "接近中" },
+  { value: "passing", label: "通過中" },
+  { value: "moving", label: "移動中" },
 ];
 
 // アコーディオンコンテンツの高さ
@@ -259,7 +253,7 @@ export default function TimelineScreen() {
                   </View>
                 )}
               </View>
-              <Animated.Text style={[styles.arrowIcon, arrowStyle, { color: colors.muted }]}>
+              <Animated.Text style={[styles.arrowIcon, arrowStyle]}>
                 ▼
               </Animated.Text>
             </View>
@@ -311,14 +305,14 @@ export default function TimelineScreen() {
                         className={cn(
                           "px-3 py-2 rounded-full border",
                           selectedStates.has(option.value)
-                            ? `${option.selectedBgClass} ${option.selectedBorderClass}`
+                            ? "bg-primary border-primary"
                             : "bg-background border-border"
                         )}
                       >
                         <Text
                           className={cn(
                             "text-sm font-medium",
-                            selectedStates.has(option.value) ? option.selectedTextClass : "text-foreground"
+                            selectedStates.has(option.value) ? "text-white" : "text-foreground"
                           )}
                         >
                           {option.label}
@@ -489,5 +483,6 @@ const styles = StyleSheet.create({
   },
   arrowIcon: {
     fontSize: 12,
+    color: "#687076",
   },
 });
