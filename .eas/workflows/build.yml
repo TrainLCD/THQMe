@@ -16,3 +16,19 @@ jobs:
     params:
       platform: ios
       profile: production
+
+  submit_android:
+    needs: [build_android]
+    type: submit
+    params:
+      platform: android
+      profile: production
+      build_id: ${{ needs.build_android.outputs.build_id }}
+
+  submit_ios:
+    needs: [build_ios]
+    type: submit
+    params:
+      platform: ios
+      profile: production
+      build_id: ${{ needs.build_ios.outputs.build_id }}
