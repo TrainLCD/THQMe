@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, Fragment } from "react";
 import {
   Text,
   View,
@@ -279,7 +279,7 @@ export default function MapScreen() {
               }}
             >
               {trajectories.map((trajectory) => (
-                <View key={trajectory.deviceId}>
+                <Fragment key={trajectory.deviceId}>
                   {Polyline && trajectory.coordinates.length > 1 && (
                     <Polyline
                       coordinates={trajectory.coordinates}
@@ -295,7 +295,7 @@ export default function MapScreen() {
                       pinColor={getDeviceColor(trajectory.deviceId, state.deviceIds)}
                     />
                   )}
-                </View>
+                </Fragment>
               ))}
             </MapView>
           ) : null}
