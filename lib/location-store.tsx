@@ -36,9 +36,9 @@ function locationReducer(state: LocationState, action: LocationAction): Location
     case "ADD_UPDATE": {
       const update = action.payload;
       const newUpdates = [update, ...state.updates].slice(0, MAX_UPDATES);
-      const deviceIds = Array.from(
-        new Set([update.device, ...state.deviceIds])
-      );
+      const deviceIds = state.deviceIds.includes(update.device)
+        ? state.deviceIds
+        : [...state.deviceIds, update.device];
       return {
         ...state,
         updates: newUpdates,

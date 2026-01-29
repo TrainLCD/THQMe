@@ -34,9 +34,9 @@ const MOVING_STATES: { value: MovingState; label: string }[] = [
   { value: "moving", label: "移動中" },
 ];
 
-// アコーディオンコンテンツの高さ
-const ACCORDION_CONTENT_HEIGHT_BASE = 80; // 状態フィルターのみ
-const ACCORDION_CONTENT_HEIGHT_WITH_DEVICE = 150; // 状態 + デバイスフィルター
+// アコーディオンコンテンツの最大高さ（アニメーション用）
+const ACCORDION_MAX_HEIGHT_BASE = 200; // 状態フィルターのみ
+const ACCORDION_MAX_HEIGHT_WITH_DEVICE = 300; // 状態 + デバイスフィルター
 
 export default function TimelineScreen() {
   const { state, clearUpdates } = useLocation();
@@ -50,7 +50,7 @@ export default function TimelineScreen() {
 
   // アニメーション用の共有値
   const rotateValue = useSharedValue(0);
-  const heightValue = useSharedValue(0);
+  const maxHeightValue = useSharedValue(0);
   const opacityValue = useSharedValue(0);
 
   // 矢印の回転アニメーション
@@ -63,16 +63,16 @@ export default function TimelineScreen() {
   // コンテンツの高さアニメーション
   const contentStyle = useAnimatedStyle(() => {
     return {
-      height: heightValue.value,
+      maxHeight: maxHeightValue.value,
       opacity: opacityValue.value,
       overflow: "hidden" as const,
     };
   });
 
-  // デバイスフィルターがある場合は高さを増やす
-  const contentHeight = state.deviceIds.length > 0
-    ? ACCORDION_CONTENT_HEIGHT_WITH_DEVICE
-    : ACCORDION_CONTENT_HEIGHT_BASE;
+  // デバイスフィルターがある場合は最大高さを増やす
+  const maxContentHeight = state.deviceIds.length > 0
+    ? ACCORDION_MAX_HEIGHT_WITH_DEVICE
+    : ACCORDION_MAX_HEIGHT_BASE;
 
   // Filter updates by search query, selected states and devices
   const filteredUpdates = useMemo(() => {
@@ -184,9 +184,9 @@ export default function TimelineScreen() {
     };
 
     rotateValue.value = withTiming(newValue ? 180 : 0, animConfig);
-    heightValue.value = withTiming(newValue ? contentHeight : 0, animConfig);
+    maxHeightValue.value = withTiming(newValue ? maxContentHeight : 0, animConfig);
     opacityValue.value = withTiming(newValue ? 1 : 0, { duration: newValue ? 250 : 150 });
-  }, [isFilterExpanded, rotateValue, heightValue, opacityValue, contentHeight]);
+  }, [isFilterExpanded, rotateValue, maxHeightValue, opacityValue, maxContentHeight]);
 
   // 検索クリア
   const handleClearSearch = useCallback(() => {
