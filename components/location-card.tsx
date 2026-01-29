@@ -58,7 +58,7 @@ function formatAccuracy(accuracy: number | null | undefined): string {
 }
 
 function formatBatteryLevel(level: number): string {
-  return `${Math.round(level)}%`;
+  return `${Math.round(level * 100)}%`;
 }
 
 const batteryStateLabels: Record<BatteryState, string> = {
