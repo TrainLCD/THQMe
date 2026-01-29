@@ -102,6 +102,7 @@ const config: ExpoConfig = {
       projectId: process.env.EAS_PROJECT_ID || "",
     },
   },
+  owner: "trainlcd",
 };
 
 export default config;
