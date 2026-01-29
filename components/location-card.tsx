@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { View, Text } from "react-native";
-import type { LocationUpdate, MovingState } from "@/lib/types/location";
+import type { LocationUpdate, MovingState, BatteryState } from "@/lib/types/location";
 import { cn } from "@/lib/utils";
 import { useColors } from "@/hooks/use-colors";
 
@@ -57,6 +57,22 @@ function formatAccuracy(accuracy: number | null | undefined): string {
   return `${accuracy.toFixed(0)}m`;
 }
 
+function formatBatteryLevel(level: number): string {
+  return `${Math.round(level)}%`;
+}
+
+const batteryStateLabels: Record<BatteryState, string> = {
+  charging: "充電中",
+  unplugged: "未接続",
+  full: "満充電",
+  unknown: "不明",
+};
+
+function formatBatteryState(state: BatteryState | null): string {
+  if (state === null) return "-";
+  return batteryStateLabels[state] || String(state);
+}
+
 export const LocationCard = memo(function LocationCard({ update }: LocationCardProps) {
   const colors = useColors();
   // stateConfigに存在しない値の場合はフォールバックを使用
@@ -66,64 +82,51 @@ export const LocationCard = memo(function LocationCard({ update }: LocationCardP
 
   return (
     <View className="bg-surface rounded-xl p-4 border border-border">
-      {/* Header: Date and Device */}
-      <View className="flex-row justify-between items-center mb-1">
+      {/* Header: DateTime + Device + State Badge */}
+      <View className="flex-row justify-between items-center mb-2">
         <View className="flex-row items-center">
-          <Text className="text-muted text-sm mr-2">📅</Text>
-          <Text className="text-foreground font-semibold">
-            {formatDate(update.timestamp)}
+          <Text className="text-foreground font-semibold text-base">
+            🕐 {formatDate(update.timestamp)} {formatTimestamp(update.timestamp)}
           </Text>
         </View>
-        <View className="flex-row items-center">
-          <Text className="text-muted text-sm mr-1">📱</Text>
-          <Text className="text-muted text-sm" numberOfLines={1}>
+        <View className="flex-row items-center gap-2">
+          <View
+            className={cn("px-2 py-0.5 rounded-full", stateConf.bgClass)}
+            style={{ borderWidth: 1, borderColor }}
+          >
+            <Text className={cn("text-base font-medium", stateConf.textClass)}>
+              {stateLabel}
+            </Text>
+          </View>
+          <Text className="text-muted text-base" numberOfLines={1}>
             {update.device}
           </Text>
         </View>
       </View>
 
-      {/* Time */}
-      <View className="flex-row items-center mb-3">
-        <Text className="text-muted text-sm mr-2">🕐</Text>
-        <Text className="text-foreground font-semibold">
-          {formatTimestamp(update.timestamp)}
+      {/* Coordinates */}
+      <View className="flex-row items-center mb-2">
+        <Text className="text-base mr-1">📍</Text>
+        <Text className="text-foreground text-base">
+          {formatCoordinate(update.coords.latitude, "lat")}, {formatCoordinate(update.coords.longitude, "lng")}
         </Text>
       </View>
 
-      {/* Coordinates */}
-      <View className="mb-3">
-        <View className="flex-row items-center mb-1">
-          <Text className="text-muted text-sm mr-2">📍</Text>
-          <Text className="text-foreground">
-            {formatCoordinate(update.coords.latitude, "lat")},{" "}
-            {formatCoordinate(update.coords.longitude, "lng")}
-          </Text>
+      {/* Metrics */}
+      <View className="flex-row mb-1">
+        <View style={{ width: "33%" }}>
+          <Text className="text-muted text-base">🏎️ {formatSpeed(update.coords.speed)}</Text>
+        </View>
+        <View style={{ width: "22%" }}>
+          <Text className="text-muted text-base">🎯 {formatAccuracy(update.coords.accuracy)}</Text>
         </View>
       </View>
-
-      {/* Speed and Accuracy */}
-      <View className="flex-row justify-between items-center mb-3">
-        <View className="flex-row items-center">
-          <Text className="text-muted text-sm mr-2">🚀</Text>
-          <Text className="text-muted text-sm">Speed: </Text>
-          <Text className="text-foreground">{formatSpeed(update.coords.speed)}</Text>
-        </View>
-        <View className="flex-row items-center">
-          <Text className="text-muted text-sm mr-2">⚡</Text>
-          <Text className="text-muted text-sm">Acc: </Text>
-          <Text className="text-foreground">{formatAccuracy(update.coords.accuracy)}</Text>
-        </View>
-      </View>
-
-      {/* State Badge */}
       <View className="flex-row">
-        <View 
-          className={cn("px-3 py-1 rounded-full", stateConf.bgClass)}
-          style={{ borderWidth: 1, borderColor }}
-        >
-          <Text className={cn("text-sm font-medium", stateConf.textClass)}>
-            ● {stateLabel}
-          </Text>
+        <View style={{ width: "33%" }}>
+          <Text className="text-muted text-base">🔋 {formatBatteryLevel(update.battery_level)}</Text>
+        </View>
+        <View style={{ width: "22%" }}>
+          <Text className="text-muted text-base">🔌 {formatBatteryState(update.battery_state)}</Text>
         </View>
       </View>
     </View>

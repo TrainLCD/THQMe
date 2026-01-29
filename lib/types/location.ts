@@ -18,6 +18,11 @@ export interface Coords {
 }
 
 /**
+ * バッテリーの充電状態
+ */
+export type BatteryState = "charging" | "unplugged" | "full" | "unknown";
+
+/**
  * WebSocket経由で受信する位置情報更新データ
  */
 export interface LocationUpdate {
@@ -27,6 +32,8 @@ export interface LocationUpdate {
   state: MovingState;
   timestamp: number;
   type: "location_update";
+  battery_level: number;
+  battery_state: BatteryState | null;
 }
 
 /**
