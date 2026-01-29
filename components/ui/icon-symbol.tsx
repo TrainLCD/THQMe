@@ -21,6 +21,7 @@ const MAPPING = {
   "clock.fill": "schedule",
   "location.fill": "location-on",
   "doc.text.fill": "article",
+  "map.fill": "map",
 } as IconMapping;
 
 /**

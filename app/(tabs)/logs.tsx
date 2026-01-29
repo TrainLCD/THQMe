@@ -40,9 +40,9 @@ const LOG_LEVELS: { value: LogLevel; label: string }[] = [
   { value: "error", label: "ERROR" },
 ];
 
-// アコーディオンコンテンツの高さ
-const ACCORDION_CONTENT_HEIGHT_BASE = 150; // タイプ + レベルフィルターのみ
-const ACCORDION_CONTENT_HEIGHT_WITH_DEVICE = 220; // + デバイスフィルター
+// アコーディオンコンテンツの最大高さ（アニメーション用）
+const ACCORDION_MAX_HEIGHT_BASE = 300; // タイプ + レベルフィルターのみ
+const ACCORDION_MAX_HEIGHT_WITH_DEVICE = 400; // + デバイスフィルター
 
 export default function LogsScreen() {
   const { state, clearUpdates } = useLocation();
@@ -57,7 +57,7 @@ export default function LogsScreen() {
 
   // アニメーション用の共有値
   const rotateValue = useSharedValue(0);
-  const heightValue = useSharedValue(0);
+  const maxHeightValue = useSharedValue(0);
   const opacityValue = useSharedValue(0);
 
   // 矢印の回転アニメーション
@@ -70,7 +70,7 @@ export default function LogsScreen() {
   // コンテンツの高さアニメーション
   const contentStyle = useAnimatedStyle(() => {
     return {
-      height: heightValue.value,
+      maxHeight: maxHeightValue.value,
       opacity: opacityValue.value,
       overflow: "hidden" as const,
     };
@@ -87,10 +87,10 @@ export default function LogsScreen() {
     return Array.from(deviceSet).sort();
   }, [state.logs]);
 
-  // デバイスフィルターがある場合は高さを増やす
-  const contentHeight = logDeviceIds.length > 0
-    ? ACCORDION_CONTENT_HEIGHT_WITH_DEVICE
-    : ACCORDION_CONTENT_HEIGHT_BASE;
+  // デバイスフィルターがある場合は最大高さを増やす
+  const maxContentHeight = logDeviceIds.length > 0
+    ? ACCORDION_MAX_HEIGHT_WITH_DEVICE
+    : ACCORDION_MAX_HEIGHT_BASE;
 
   // フィルタリングされたログ
   const filteredLogs = useMemo(() => {
@@ -226,9 +226,9 @@ export default function LogsScreen() {
     };
     
     rotateValue.value = withTiming(newValue ? 180 : 0, animConfig);
-    heightValue.value = withTiming(newValue ? contentHeight : 0, animConfig);
+    maxHeightValue.value = withTiming(newValue ? maxContentHeight : 0, animConfig);
     opacityValue.value = withTiming(newValue ? 1 : 0, { duration: newValue ? 250 : 150 });
-  }, [isFilterExpanded, rotateValue, heightValue, opacityValue, contentHeight]);
+  }, [isFilterExpanded, rotateValue, maxHeightValue, opacityValue, maxContentHeight]);
 
   // 検索クリア
   const handleClearSearch = useCallback(() => {
