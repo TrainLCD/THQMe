@@ -9,14 +9,30 @@ import type {
 } from "../types/location";
 
 // Reducer logic extracted for testing
+const MAX_UPDATES_PER_DEVICE = 500;
+const MAX_LOGS_PER_DEVICE = 500;
+
+function enforcePerDeviceLimit<T extends { device: string }>(
+  items: T[],
+  maxPerDevice: number
+): T[] {
+  const countByDevice = new Map<string, number>();
+  return items.filter((item) => {
+    const count = countByDevice.get(item.device) ?? 0;
+    if (count >= maxPerDevice) return false;
+    countByDevice.set(item.device, count + 1);
+    return true;
+  });
+}
+
 function locationReducer(state: LocationState, action: LocationAction): LocationState {
-  const MAX_UPDATES = 500;
-  const MAX_LOGS = 200;
-  
   switch (action.type) {
     case "ADD_UPDATE": {
       const update = action.payload;
-      const newUpdates = [update, ...state.updates].slice(0, MAX_UPDATES);
+      const newUpdates = enforcePerDeviceLimit(
+        [update, ...state.updates],
+        MAX_UPDATES_PER_DEVICE
+      );
       const deviceIds = Array.from(
         new Set([update.device, ...state.deviceIds])
       );
@@ -29,7 +45,10 @@ function locationReducer(state: LocationState, action: LocationAction): Location
     }
     case "ADD_LOG": {
       const log = action.payload;
-      const newLogs = [log, ...state.logs].slice(0, MAX_LOGS);
+      const newLogs = enforcePerDeviceLimit(
+        [log, ...state.logs],
+        MAX_LOGS_PER_DEVICE
+      );
       return {
         ...state,
         logs: newLogs,
@@ -123,25 +142,50 @@ describe("Location Store Reducer", () => {
       expect(newState.deviceIds.filter(d => d === "device-a")).toHaveLength(1);
     });
 
-    it("should limit updates to MAX_UPDATES (500)", () => {
-      // Create state with 500 updates
+    it("should limit updates to 500 per device", () => {
+      // Create state with 500 updates from one device
       const existingUpdates = Array.from({ length: 500 }, (_, i) =>
-        createMockUpdate({ id: `existing-${i}` })
+        createMockUpdate({ id: `existing-${i}`, device: "device-a" })
       );
       const stateWithManyUpdates: LocationState = {
         ...initialState,
         updates: existingUpdates,
         messageCount: 500,
       };
-      
-      const newUpdate = createMockUpdate({ id: "new-update" });
+
+      const newUpdate = createMockUpdate({ id: "new-update", device: "device-a" });
       const action: LocationAction = { type: "ADD_UPDATE", payload: newUpdate };
-      
+
       const newState = locationReducer(stateWithManyUpdates, action);
-      
+
       expect(newState.updates).toHaveLength(500);
       expect(newState.updates[0].id).toBe("new-update");
       expect(newState.messageCount).toBe(501);
+    });
+
+    it("should allow 500 updates per device independently", () => {
+      // Create state with 500 updates from device-a
+      const deviceAUpdates = Array.from({ length: 500 }, (_, i) =>
+        createMockUpdate({ id: `a-${i}`, device: "device-a" })
+      );
+      const stateWithDeviceA: LocationState = {
+        ...initialState,
+        updates: deviceAUpdates,
+        messageCount: 500,
+        deviceIds: ["device-a"],
+      };
+
+      // Adding an update from device-b should not evict device-a's entries
+      const newUpdate = createMockUpdate({ id: "b-0", device: "device-b" });
+      const action: LocationAction = { type: "ADD_UPDATE", payload: newUpdate };
+
+      const newState = locationReducer(stateWithDeviceA, action);
+
+      expect(newState.updates).toHaveLength(501);
+      const deviceACounts = newState.updates.filter(u => u.device === "device-a").length;
+      const deviceBCounts = newState.updates.filter(u => u.device === "device-b").length;
+      expect(deviceACounts).toBe(500);
+      expect(deviceBCounts).toBe(1);
     });
   });
 
@@ -156,22 +200,44 @@ describe("Location Store Reducer", () => {
       expect(newState.logs[0]).toEqual(log);
     });
 
-    it("should limit logs to MAX_LOGS (200)", () => {
-      const existingLogs = Array.from({ length: 200 }, (_, i) =>
-        createMockLog({ id: `existing-log-${i}` })
+    it("should limit logs to 500 per device", () => {
+      const existingLogs = Array.from({ length: 500 }, (_, i) =>
+        createMockLog({ id: `existing-log-${i}`, device: "device-a" })
       );
       const stateWithManyLogs: LocationState = {
         ...initialState,
         logs: existingLogs,
       };
-      
-      const newLog = createMockLog({ id: "new-log" });
+
+      const newLog = createMockLog({ id: "new-log", device: "device-a" });
       const action: LocationAction = { type: "ADD_LOG", payload: newLog };
-      
+
       const newState = locationReducer(stateWithManyLogs, action);
-      
-      expect(newState.logs).toHaveLength(200);
+
+      expect(newState.logs).toHaveLength(500);
       expect(newState.logs[0].id).toBe("new-log");
+    });
+
+    it("should allow 500 logs per device independently", () => {
+      const deviceALogs = Array.from({ length: 500 }, (_, i) =>
+        createMockLog({ id: `a-log-${i}`, device: "device-a" })
+      );
+      const stateWithDeviceA: LocationState = {
+        ...initialState,
+        logs: deviceALogs,
+      };
+
+      // Adding a log from device-b should not evict device-a's logs
+      const newLog = createMockLog({ id: "b-log-0", device: "device-b" });
+      const action: LocationAction = { type: "ADD_LOG", payload: newLog };
+
+      const newState = locationReducer(stateWithDeviceA, action);
+
+      expect(newState.logs).toHaveLength(501);
+      const deviceACount = newState.logs.filter(l => l.device === "device-a").length;
+      const deviceBCount = newState.logs.filter(l => l.device === "device-b").length;
+      expect(deviceACount).toBe(500);
+      expect(deviceBCount).toBe(1);
     });
 
     it("should handle nested log object with level and message", () => {
