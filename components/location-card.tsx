@@ -68,8 +68,20 @@ const batteryStateLabels: Record<BatteryState, string> = {
   unknown: "不明",
 };
 
-function formatBatteryState(state: BatteryState | null): string {
-  if (state === null) return "-";
+// Expo Battery.BatteryState の整数値に対応するマッピング
+const batteryStateFromNumber: Record<number, BatteryState> = {
+  0: "unknown",
+  1: "unplugged",
+  2: "charging",
+  3: "full",
+};
+
+function formatBatteryState(state: BatteryState | number | null): string {
+  if (state === null || state === undefined) return "-";
+  if (typeof state === "number") {
+    const mapped = batteryStateFromNumber[state];
+    return mapped ? batteryStateLabels[mapped] : "不明";
+  }
   return batteryStateLabels[state] || String(state);
 }
 
