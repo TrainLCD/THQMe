@@ -13,8 +13,25 @@ const WS_URL = "wss://analytics-internal.trainlcd.app/ws";
 const WS_AUTH_TOKEN = Constants.expoConfig?.extra?.thqWsAuthToken || "";
 const WS_PROTOCOLS = ["thq", `thq-auth-${WS_AUTH_TOKEN}`];
 
-const MAX_UPDATES = 500; // 保持する最大更新数
-const MAX_LOGS = 500; // 保持する最大ログ数
+const MAX_UPDATES_PER_DEVICE = 500; // デバイスごとに保持する最大更新数
+const MAX_LOGS_PER_DEVICE = 500; // デバイスごとに保持する最大ログ数
+
+/**
+ * デバイスごとに最大件数を制限する
+ * 配列の先頭が最新なので、先頭から数えて制限を超えた古いエントリを除外する
+ */
+function enforcePerDeviceLimit<T extends { device: string }>(
+  items: T[],
+  maxPerDevice: number
+): T[] {
+  const countByDevice = new Map<string, number>();
+  return items.filter((item) => {
+    const count = countByDevice.get(item.device) ?? 0;
+    if (count >= maxPerDevice) return false;
+    countByDevice.set(item.device, count + 1);
+    return true;
+  });
+}
 
 // 自動再接続設定
 const RECONNECT_INITIAL_DELAY = 1000; // 初回再接続待機時間（1秒）
@@ -35,7 +52,10 @@ function locationReducer(state: LocationState, action: LocationAction): Location
   switch (action.type) {
     case "ADD_UPDATE": {
       const update = action.payload;
-      const newUpdates = [update, ...state.updates].slice(0, MAX_UPDATES);
+      const newUpdates = enforcePerDeviceLimit(
+        [update, ...state.updates],
+        MAX_UPDATES_PER_DEVICE
+      );
       const deviceIds = state.deviceIds.includes(update.device)
         ? state.deviceIds
         : [...state.deviceIds, update.device];
@@ -48,7 +68,10 @@ function locationReducer(state: LocationState, action: LocationAction): Location
     }
     case "ADD_LOG": {
       const log = action.payload;
-      const newLogs = [log, ...state.logs].slice(0, MAX_LOGS);
+      const newLogs = enforcePerDeviceLimit(
+        [log, ...state.logs],
+        MAX_LOGS_PER_DEVICE
+      );
       return {
         ...state,
         logs: newLogs,
