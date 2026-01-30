@@ -48,6 +48,7 @@ export default function MapScreen() {
   const [selectedDevices, setSelectedDevices] = useState<Set<string>>(new Set());
   const [isFilterExpanded, setIsFilterExpanded] = useState(true);
   const mapRef = useRef<MapViewRef | null>(null);
+  const [isFollowing, setIsFollowing] = useState(true);
 
   // アニメーション用の共有値（開いた状態で初期化）
   const rotateValue = useSharedValue(180);
@@ -73,9 +74,31 @@ export default function MapScreen() {
     };
   });
 
-  // デバイス選択が変わったらカメラ調整
+  // 追従モード時のみカメラ調整
   useEffect(() => {
-    if (Platform.OS === "web" || !mapRef.current) return;
+    if (Platform.OS === "web" || !mapRef.current || !isFollowing) return;
+
+    const allCoords = getAllCoordinates(trajectories);
+    if (allCoords.length === 0) return;
+
+    mapRef.current.fitToCoordinates(allCoords, {
+      edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+      animated: true,
+    });
+  }, [trajectories, isFollowing]);
+
+  // ユーザーが手動で地図を操作したら追従を解除
+  const handleMapPanDrag = useCallback(() => {
+    setIsFollowing(false);
+  }, []);
+
+  // 現在地に戻るボタン
+  const handleReturnToCurrentLocation = useCallback(() => {
+    if (!mapRef.current) return;
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setIsFollowing(true);
 
     const allCoords = getAllCoordinates(trajectories);
     if (allCoords.length === 0) return;
@@ -268,36 +291,48 @@ export default function MapScreen() {
               </Text>
             </View>
           ) : MapView ? (
-            <MapView
-              ref={mapRef}
-              style={styles.map}
-              initialRegion={{
-                latitude: 35.6812,
-                longitude: 139.7671,
-                latitudeDelta: 0.5,
-                longitudeDelta: 0.5,
-              }}
-            >
-              {trajectories.map((trajectory) => (
-                <Fragment key={trajectory.deviceId}>
-                  {Polyline && trajectory.coordinates.length > 1 && (
-                    <Polyline
-                      coordinates={trajectory.coordinates}
-                      strokeColor={getDeviceColor(trajectory.deviceId, state.deviceIds)}
-                      strokeWidth={4}
-                    />
-                  )}
-                  {Marker && trajectory.latestPosition && (
-                    <Marker
-                      coordinate={trajectory.latestPosition}
-                      title={trajectory.deviceId}
-                      description="最新位置"
-                      pinColor={getDeviceColor(trajectory.deviceId, state.deviceIds)}
-                    />
-                  )}
-                </Fragment>
-              ))}
-            </MapView>
+            <View style={styles.mapContainer}>
+              <MapView
+                ref={mapRef}
+                style={styles.map}
+                initialRegion={{
+                  latitude: 35.6812,
+                  longitude: 139.7671,
+                  latitudeDelta: 0.5,
+                  longitudeDelta: 0.5,
+                }}
+                onPanDrag={handleMapPanDrag}
+              >
+                {trajectories.map((trajectory) => (
+                  <Fragment key={trajectory.deviceId}>
+                    {Polyline && trajectory.coordinates.length > 1 && (
+                      <Polyline
+                        coordinates={trajectory.coordinates}
+                        strokeColor={getDeviceColor(trajectory.deviceId, state.deviceIds)}
+                        strokeWidth={4}
+                      />
+                    )}
+                    {Marker && trajectory.latestPosition && (
+                      <Marker
+                        coordinate={trajectory.latestPosition}
+                        title={trajectory.deviceId}
+                        description="最新位置"
+                        pinColor={getDeviceColor(trajectory.deviceId, state.deviceIds)}
+                      />
+                    )}
+                  </Fragment>
+                ))}
+              </MapView>
+              {!isFollowing && (
+                <TouchableOpacity
+                  style={styles.returnButton}
+                  onPress={handleReturnToCurrentLocation}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.returnButtonText}>現在地に戻る</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           ) : null}
         </View>
       </View>
@@ -321,7 +356,30 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     marginBottom: 4,
   },
+  mapContainer: {
+    flex: 1,
+    position: "relative",
+  },
   map: {
     flex: 1,
+  },
+  returnButton: {
+    position: "absolute",
+    bottom: 16,
+    right: 16,
+    backgroundColor: "#007AFF",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  returnButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
