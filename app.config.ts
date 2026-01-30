@@ -99,7 +99,9 @@ const config: ExpoConfig = {
   extra: {
     thqWsAuthToken: process.env.THQ_WS_AUTH_TOKEN || "",
     eas: {
-      projectId: process.env.EAS_PROJECT_ID || "",
+      projectId:
+        process.env.EAS_BUILD_PROJECT_ID ||
+        "375ce90c-1926-47b0-aaac-06c1642b0022",
     },
   },
   owner: "trainlcd",
