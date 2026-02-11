@@ -17,7 +17,7 @@ import Animated, {
 
 import { ScreenContainer } from "@/components/screen-container";
 import { ConnectionStatusBadge } from "@/components/connection-status";
-import { stateConfig, defaultStateConfig } from "@/components/location-card";
+import { stateConfig, defaultStateConfig, formatSpeed, formatAccuracy, formatBatteryLevel } from "@/components/location-card";
 import { useLocation } from "@/lib/location-store";
 import { useColors } from "@/hooks/use-colors";
 import { cn } from "@/lib/utils";
@@ -399,6 +399,11 @@ export default function MapScreen() {
                                   </View>
                                 </View>
                                 <Text style={styles.calloutDescription}>最新位置</Text>
+                                <View style={styles.calloutMetrics}>
+                                  <Text style={styles.calloutMetricText}>🏎️ {formatSpeed(trajectory.latestSpeed)}</Text>
+                                  <Text style={styles.calloutMetricText}>🎯 {formatAccuracy(trajectory.latestAccuracy)}</Text>
+                                  <Text style={styles.calloutMetricText}>🔋 {trajectory.latestBatteryLevel != null ? formatBatteryLevel(trajectory.latestBatteryLevel) : "-"}</Text>
+                                </View>
                               </View>
                             </Callout>
                           )}
@@ -484,5 +489,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#687076",
     marginTop: 4,
+  },
+  calloutMetrics: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 4,
+  },
+  calloutMetricText: {
+    fontSize: 11,
+    color: "#687076",
   },
 });

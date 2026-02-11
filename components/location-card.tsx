@@ -41,7 +41,7 @@ function formatTimestamp(timestamp: number): string {
   });
 }
 
-function formatSpeed(speed: number | null | undefined): string {
+export function formatSpeed(speed: number | null | undefined): string {
   if (speed === null || speed === undefined || speed === -1) {
     return "-";
   }
@@ -50,14 +50,14 @@ function formatSpeed(speed: number | null | undefined): string {
   return `${kmh.toFixed(1)} km/h`;
 }
 
-function formatAccuracy(accuracy: number | null | undefined): string {
+export function formatAccuracy(accuracy: number | null | undefined): string {
   if (accuracy === null || accuracy === undefined) {
     return "-";
   }
   return `${accuracy.toFixed(0)}m`;
 }
 
-function formatBatteryLevel(level: number): string {
+export function formatBatteryLevel(level: number): string {
   return `${Math.round(level * 100)}%`;
 }
 

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { LocationUpdate, MovingState } from "@/lib/types/location";
+import type { LocationUpdate, MovingState, BatteryState } from "@/lib/types/location";
 
 export interface Coordinate {
   latitude: number;
@@ -11,6 +11,10 @@ export interface DeviceTrajectory {
   coordinates: Coordinate[];
   latestPosition: Coordinate | null;
   latestState: MovingState | null;
+  latestSpeed: number | null | undefined;
+  latestAccuracy: number | null | undefined;
+  latestBatteryLevel: number | null;
+  latestBatteryState: BatteryState | number | null;
 }
 
 /**
@@ -49,16 +53,20 @@ export function useDeviceTrajectory(
         longitude: u.coords.longitude,
       }));
 
+      const latestUpdate = sorted.length > 0 ? sorted[sorted.length - 1] : null;
       const latestPosition =
         coordinates.length > 0 ? coordinates[coordinates.length - 1] : null;
-      const latestState =
-        sorted.length > 0 ? sorted[sorted.length - 1].state : null;
+      const latestState = latestUpdate?.state ?? null;
 
       trajectories.push({
         deviceId,
         coordinates,
         latestPosition,
         latestState,
+        latestSpeed: latestUpdate?.coords.speed ?? null,
+        latestAccuracy: latestUpdate?.coords.accuracy ?? null,
+        latestBatteryLevel: latestUpdate?.battery_level ?? null,
+        latestBatteryState: latestUpdate?.battery_state ?? null,
       });
     }
 
