@@ -366,6 +366,7 @@ export default function MapScreen() {
                         title={trajectory.deviceId}
                         description="最新位置"
                         pinColor={getDeviceColor(trajectory.deviceId, state.deviceIds)}
+                        stopPropagation
                         onPress={() => handleMarkerPress(trajectory.deviceId)}
                         onCalloutPress={() => handleCalloutPress(trajectory.deviceId)}
                       />
