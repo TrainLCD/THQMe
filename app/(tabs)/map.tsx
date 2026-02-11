@@ -39,6 +39,7 @@ if (Platform.OS !== "web") {
 }
 
 type MapViewRef = import("react-native-maps").default;
+type MapMarkerRef = { showCallout: () => void; hideCallout: () => void };
 
 // アコーディオンコンテンツの最大高さ（アニメーション用）
 const ACCORDION_MAX_HEIGHT = 200;
@@ -49,6 +50,8 @@ export default function MapScreen() {
   const [isFilterExpanded, setIsFilterExpanded] = useState(true);
   const mapRef = useRef<MapViewRef | null>(null);
   const [isFollowing, setIsFollowing] = useState(true);
+  const selectedMarkerIdRef = useRef<string | null>(null);
+  const markerRefs = useRef<Map<string, MapMarkerRef>>(new Map());
 
   // アニメーション用の共有値（開いた状態で初期化）
   const rotateValue = useSharedValue(180);
@@ -90,6 +93,36 @@ export default function MapScreen() {
   // ユーザーが手動で地図を操作したら追従を解除
   const handleMapPanDrag = useCallback(() => {
     setIsFollowing(false);
+  }, []);
+
+  // マーカーをタップしたら選択状態にする
+  const handleMarkerPress = useCallback((deviceId: string) => {
+    selectedMarkerIdRef.current = deviceId;
+  }, []);
+
+  // マップ背景をタップしたら吹き出しを明示的に閉じる
+  const handleMapPress = useCallback(() => {
+    selectedMarkerIdRef.current = null;
+  }, []);
+
+  // 吹き出しをタップしたら閉じる
+  const handleCalloutPress = useCallback((deviceId: string) => {
+    selectedMarkerIdRef.current = null;
+    const marker = markerRefs.current.get(deviceId);
+    if (marker) {
+      marker.hideCallout();
+    }
+  }, []);
+
+  // 地図の移動完了後に選択中のマーカーの吹き出しを再表示する
+  const handleRegionChangeComplete = useCallback(() => {
+    const markerId = selectedMarkerIdRef.current;
+    if (markerId) {
+      const marker = markerRefs.current.get(markerId);
+      if (marker) {
+        marker.showCallout();
+      }
+    }
   }, []);
 
   // 現在地に戻るボタン
@@ -302,6 +335,8 @@ export default function MapScreen() {
                   longitudeDelta: 0.5,
                 }}
                 onPanDrag={handleMapPanDrag}
+                onRegionChangeComplete={handleRegionChangeComplete}
+                onPress={handleMapPress}
               >
                 {trajectories.map((trajectory) => (
                   <Fragment key={trajectory.deviceId}>
@@ -314,10 +349,19 @@ export default function MapScreen() {
                     )}
                     {Marker && trajectory.latestPosition && (
                       <Marker
+                        ref={(ref) => {
+                          if (ref) {
+                            markerRefs.current.set(trajectory.deviceId, ref);
+                          } else {
+                            markerRefs.current.delete(trajectory.deviceId);
+                          }
+                        }}
                         coordinate={trajectory.latestPosition}
                         title={trajectory.deviceId}
                         description="最新位置"
                         pinColor={getDeviceColor(trajectory.deviceId, state.deviceIds)}
+                        onPress={() => handleMarkerPress(trajectory.deviceId)}
+                        onCalloutPress={() => handleCalloutPress(trajectory.deviceId)}
                       />
                     )}
                   </Fragment>
