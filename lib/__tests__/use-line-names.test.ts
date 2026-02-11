@@ -14,6 +14,7 @@ import {
   fetchLineNames,
   _resetCache,
   _getCache,
+  _getColorCache,
   _setGqlUrl,
 } from "../../hooks/use-line-names";
 
@@ -27,7 +28,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function mockFetchResponse(lines: { id: number; nameShort: string }[]) {
+function mockFetchResponse(lines: { id: number; nameShort: string; color?: string | null }[]) {
   fetchMock.mockResolvedValueOnce({
     json: () => Promise.resolve({ data: { lines } }),
   });
@@ -143,5 +144,44 @@ describe("fetchLineNames", () => {
     await vi.waitFor(() => expect(_getCache()).toHaveProperty("11302"));
     // キャッシュが更新されたことで正しい値が入っている
     expect(_getCache()["11302"]).toBe("山手線");
+  });
+
+  it("colorフィールドがある場合はカラーキャッシュに#付きで保存される", async () => {
+    mockFetchResponse([
+      { id: 11302, nameShort: "山手線", color: "80C241" },
+      { id: 24006, nameShort: "京王井の頭線", color: "DD0077" },
+    ]);
+
+    fetchLineNames(["11302", "24006"]);
+    await vi.waitFor(() => expect(_getColorCache()).toHaveProperty("11302"));
+
+    expect(_getColorCache()).toEqual({
+      "11302": "#80C241",
+      "24006": "#DD0077",
+    });
+  });
+
+  it("colorが既に#付きの場合は二重に付けない", async () => {
+    mockFetchResponse([
+      { id: 11302, nameShort: "山手線", color: "#80C241" },
+    ]);
+
+    fetchLineNames(["11302"]);
+    await vi.waitFor(() => expect(_getColorCache()).toHaveProperty("11302"));
+
+    expect(_getColorCache()).toEqual({ "11302": "#80C241" });
+  });
+
+  it("colorがnullの場合はカラーキャッシュに入れない", async () => {
+    mockFetchResponse([
+      { id: 11302, nameShort: "山手線", color: "80C241" },
+      { id: 24006, nameShort: "京王井の頭線", color: null },
+    ]);
+
+    fetchLineNames(["11302", "24006"]);
+    await vi.waitFor(() => expect(_getColorCache()).toHaveProperty("11302"));
+
+    expect(_getColorCache()).toEqual({ "11302": "#80C241" });
+    expect(_getColorCache()).not.toHaveProperty("24006");
   });
 });

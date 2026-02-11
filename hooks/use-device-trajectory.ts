@@ -6,9 +6,15 @@ export interface Coordinate {
   longitude: number;
 }
 
+export interface LineSegment {
+  lineId: string | null;
+  coordinates: Coordinate[];
+}
+
 export interface DeviceTrajectory {
   deviceId: string;
   coordinates: Coordinate[];
+  segments: LineSegment[];
   latestPosition: Coordinate | null;
   latestState: MovingState | null;
   latestSpeed: number | null | undefined;
@@ -54,6 +60,25 @@ export function useDeviceTrajectory(
         longitude: u.coords.longitude,
       }));
 
+      // 路線ごとにセグメントを分割（連続する同一路線をまとめる）
+      const segments: LineSegment[] = [];
+      for (const update of sorted) {
+        const coord: Coordinate = {
+          latitude: update.coords.latitude,
+          longitude: update.coords.longitude,
+        };
+        const current = segments[segments.length - 1];
+        if (current && current.lineId === update.line_id) {
+          current.coordinates.push(coord);
+        } else {
+          // 前セグメントの末尾座標を引き継いで接続を維持
+          const initial = current?.coordinates.length
+            ? [current.coordinates[current.coordinates.length - 1], coord]
+            : [coord];
+          segments.push({ lineId: update.line_id, coordinates: initial });
+        }
+      }
+
       const latestUpdate = sorted.length > 0 ? sorted[sorted.length - 1] : null;
       const latestPosition =
         coordinates.length > 0 ? coordinates[coordinates.length - 1] : null;
@@ -62,6 +87,7 @@ export function useDeviceTrajectory(
       trajectories.push({
         deviceId,
         coordinates,
+        segments,
         latestPosition,
         latestState,
         latestSpeed: latestUpdate?.coords.speed ?? null,
