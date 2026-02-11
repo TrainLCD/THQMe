@@ -25,6 +25,7 @@ import { useLocation } from "@/lib/location-store";
 import type { LocationUpdate, MovingState } from "@/lib/types/location";
 import { cn } from "@/lib/utils";
 import { useColors } from "@/hooks/use-colors";
+import { useLineNames } from "@/hooks/use-line-names";
 
 // 状態フィルターオプションの定義
 const MOVING_STATES: { value: MovingState; label: string }[] = [
@@ -48,6 +49,7 @@ export default function TimelineScreen() {
   const [selectedDevices, setSelectedDevices] = useState<Set<string>>(new Set());
   const [selectedRoutes, setSelectedRoutes] = useState<Set<string>>(new Set());
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+  const lineNames = useLineNames(state.lineIds);
 
   // アニメーション用の共有値
   const rotateValue = useSharedValue(0);
@@ -419,7 +421,7 @@ export default function TimelineScreen() {
               {/* Route ID Filter (only show if there are routes) */}
               {state.lineIds.length > 0 && (
                 <View className="mt-3">
-                  <Text className="text-sm text-muted mb-2">路線ID</Text>
+                  <Text className="text-sm text-muted mb-2">路線</Text>
                   <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
@@ -471,7 +473,7 @@ export default function TimelineScreen() {
                             )}
                             numberOfLines={1}
                           >
-                            {lineId}
+                            {lineNames[lineId] ? <><Text style={{ fontWeight: "bold" }}>{lineNames[lineId]}</Text>({lineId})</> : lineId}
                           </Text>
                         </View>
                       </TouchableOpacity>
@@ -503,6 +505,7 @@ export default function TimelineScreen() {
       state.connectionStatus,
       state.deviceIds,
       state.lineIds,
+      lineNames,
       state.updates.length,
       searchQuery,
       selectedStates,

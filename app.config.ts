@@ -98,6 +98,7 @@ const config: ExpoConfig = {
   },
   extra: {
     thqWsAuthToken: process.env.THQ_WS_AUTH_TOKEN || "",
+    trainlcdGqlUrl: process.env.TRAINLCD_GQL_URL || "",
     eas: {
       projectId:
         process.env.EAS_BUILD_PROJECT_ID ||

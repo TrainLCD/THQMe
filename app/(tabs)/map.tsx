@@ -27,6 +27,7 @@ import {
 } from "@/hooks/use-device-trajectory";
 import { getDeviceColor } from "@/constants/map-colors";
 import type { MovingState } from "@/lib/types/location";
+import { useLineNames } from "@/hooks/use-line-names";
 
 // react-native-maps は Web では使えないので条件付きインポート
 let MapView: typeof import("react-native-maps").default | null = null;
@@ -55,6 +56,7 @@ export default function MapScreen() {
   const [selectedDevices, setSelectedDevices] = useState<Set<string>>(new Set());
   const [selectedRoutes, setSelectedRoutes] = useState<Set<string>>(new Set());
   const [isFilterExpanded, setIsFilterExpanded] = useState(true);
+  const lineNames = useLineNames(state.lineIds);
   const mapRef = useRef<MapViewRef | null>(null);
   const [isFollowing, setIsFollowing] = useState(true);
   const selectedMarkerIdRef = useRef<string | null>(null);
@@ -361,7 +363,7 @@ export default function MapScreen() {
               {/* Route ID Filter (only show if there are routes) */}
               {state.lineIds.length > 0 && (
                 <View className="mt-3">
-                  <Text className="text-sm text-muted mb-2">路線ID</Text>
+                  <Text className="text-sm text-muted mb-2">路線</Text>
                   <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
@@ -413,7 +415,7 @@ export default function MapScreen() {
                             )}
                             numberOfLines={1}
                           >
-                            {lineId}
+                            {lineNames[lineId] ? <><Text style={{ fontWeight: "bold" }}>{lineNames[lineId]}</Text>({lineId})</> : lineId}
                           </Text>
                         </View>
                       </TouchableOpacity>
@@ -500,6 +502,9 @@ export default function MapScreen() {
                                   </View>
                                 </View>
                                 <Text style={styles.calloutDescription}>最新位置</Text>
+                                {trajectory.latestLineId && lineNames[trajectory.latestLineId] && (
+                                  <Text style={styles.calloutLineName}>🚆 {lineNames[trajectory.latestLineId]}</Text>
+                                )}
                                 <View style={styles.calloutMetrics}>
                                   <Text style={styles.calloutMetricText}>🏎️ {formatSpeed(trajectory.latestSpeed)}</Text>
                                   <Text style={styles.calloutMetricText}>🎯 {formatAccuracy(trajectory.latestAccuracy)}</Text>
@@ -590,6 +595,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#687076",
     marginTop: 4,
+    marginBottom: 4,
+  },
+  calloutLineName: {
+    fontSize: 12,
+    color: "#687076",
+    marginTop: 2,
   },
   calloutMetrics: {
     flexDirection: "row",

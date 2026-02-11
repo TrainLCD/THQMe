@@ -3,6 +3,7 @@ import { View, Text } from "react-native";
 import type { LocationUpdate, MovingState, BatteryState } from "@/lib/types/location";
 import { cn } from "@/lib/utils";
 import { useColors } from "@/hooks/use-colors";
+import { useLineNames } from "@/hooks/use-line-names";
 
 interface LocationCardProps {
   update: LocationUpdate;
@@ -87,6 +88,8 @@ function formatBatteryState(state: BatteryState | number | null): string {
 
 export const LocationCard = memo(function LocationCard({ update }: LocationCardProps) {
   const colors = useColors();
+  const lineIds = update.line_id ? [update.line_id] : [];
+  const lineNames = useLineNames(lineIds);
   // stateConfigに存在しない値の場合はフォールバックを使用
   const stateConf = stateConfig[update.state as MovingState] || defaultStateConfig;
   const stateLabel = stateConf.label === "不明" && update.state ? String(update.state) : stateConf.label;
@@ -95,7 +98,7 @@ export const LocationCard = memo(function LocationCard({ update }: LocationCardP
   return (
     <View className="bg-surface rounded-xl p-4 border border-border">
       {/* Header: DateTime + Device + State Badge */}
-      <View className="flex-row justify-between items-center mb-2">
+      <View className="flex-row justify-between items-center mb-1">
         <View className="flex-row items-center">
           <Text className="text-foreground font-semibold text-base">
             🕐 {formatDate(update.timestamp)} {formatTimestamp(update.timestamp)}
@@ -116,11 +119,11 @@ export const LocationCard = memo(function LocationCard({ update }: LocationCardP
         </View>
       </View>
 
-      {/* Route ID */}
-      {update.line_id && (
-        <View className="flex-row items-center mb-2">
+      {/* Route Name */}
+      {update.line_id && lineNames[update.line_id] && (
+        <View className="flex-row items-center mb-1">
           <Text className="text-base mr-1">🚆</Text>
-          <Text className="text-foreground text-base">{update.line_id}</Text>
+          <Text className="text-foreground text-base">{lineNames[update.line_id]}</Text>
         </View>
       )}
 
