@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { View, Text } from "react-native";
 import type { LocationUpdate, MovingState, BatteryState } from "@/lib/types/location";
 import { cn } from "@/lib/utils";
@@ -88,7 +88,7 @@ function formatBatteryState(state: BatteryState | number | null): string {
 
 export const LocationCard = memo(function LocationCard({ update }: LocationCardProps) {
   const colors = useColors();
-  const lineIds = update.line_id ? [update.line_id] : [];
+  const lineIds = useMemo(() => (update.line_id ? [update.line_id] : []), [update.line_id]);
   const lineNames = useLineNames(lineIds);
   // stateConfigに存在しない値の場合はフォールバックを使用
   const stateConf = stateConfig[update.state as MovingState] || defaultStateConfig;

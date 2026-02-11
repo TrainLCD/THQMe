@@ -22,9 +22,11 @@ beforeEach(() => {
   _resetCache();
   _setGqlUrl("https://gql-stg.trainlcd.app/");
   fetchMock.mockReset();
+  vi.useFakeTimers();
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -32,6 +34,11 @@ function mockFetchResponse(lines: { id: number; nameShort: string; color?: strin
   fetchMock.mockResolvedValueOnce({
     json: () => Promise.resolve({ data: { lines } }),
   });
+}
+
+/** Promiseのマイクロタスクをフラッシュする */
+async function flushPromises() {
+  await vi.advanceTimersByTimeAsync(0);
 }
 
 describe("formatLineName", () => {
@@ -53,7 +60,7 @@ describe("fetchLineNames", () => {
     ]);
 
     fetchLineNames(["11302", "24006"]);
-    await vi.waitFor(() => expect(_getCache()).toHaveProperty("11302"));
+    await flushPromises();
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
@@ -67,7 +74,7 @@ describe("fetchLineNames", () => {
   it("取得済みIDはスキップする（キャッシュ済み）", async () => {
     mockFetchResponse([{ id: 11302, nameShort: "山手線" }]);
     fetchLineNames(["11302"]);
-    await vi.waitFor(() => expect(_getCache()).toHaveProperty("11302"));
+    await flushPromises();
 
     fetchLineNames(["11302"]);
     // 2回目のfetchは呼ばれない
@@ -77,11 +84,11 @@ describe("fetchLineNames", () => {
   it("新規IDのみを差分リクエストする", async () => {
     mockFetchResponse([{ id: 11302, nameShort: "山手線" }]);
     fetchLineNames(["11302"]);
-    await vi.waitFor(() => expect(_getCache()).toHaveProperty("11302"));
+    await flushPromises();
 
     mockFetchResponse([{ id: 24006, nameShort: "京王井の頭線" }]);
     fetchLineNames(["11302", "24006"]);
-    await vi.waitFor(() => expect(_getCache()).toHaveProperty("24006"));
+    await flushPromises();
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
     const secondBody = JSON.parse(fetchMock.mock.calls[1][1].body);
@@ -102,10 +109,101 @@ describe("fetchLineNames", () => {
   it("fetchエラー時はキャッシュが変更されない", async () => {
     fetchMock.mockRejectedValueOnce(new Error("Network error"));
     fetchLineNames(["99999"]);
+    await flushPromises();
 
-    // エラー処理を待つ
-    await new Promise((r) => setTimeout(r, 10));
     expect(_getCache()).toEqual({});
+  });
+
+  it("fetchエラー時にリトライする", async () => {
+    fetchMock.mockRejectedValueOnce(new Error("Network error"));
+    mockFetchResponse([{ id: 99999, nameShort: "テスト線" }]);
+
+    fetchLineNames(["99999"]);
+    await flushPromises();
+
+    // 初回失敗後、キャッシュは空
+    expect(_getCache()).toEqual({});
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    // 2秒後にリトライ
+    await vi.advanceTimersByTimeAsync(2000);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(_getCache()).toEqual({ "99999": "テスト線" });
+  });
+
+  it("リトライが最大回数に達した後はリトライしない", async () => {
+    // 4回連続で失敗（初回 + リトライ3回）
+    fetchMock.mockRejectedValue(new Error("Network error"));
+
+    fetchLineNames(["99999"]);
+    await flushPromises();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    // 1回目リトライ（2秒後）
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    // 2回目リトライ（4秒後）
+    await vi.advanceTimersByTimeAsync(4000);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+
+    // 3回目リトライ（8秒後）
+    await vi.advanceTimersByTimeAsync(8000);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+
+    // これ以上リトライしない
+    await vi.advanceTimersByTimeAsync(16000);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+  });
+
+  it("リトライ全失敗後に再度fetchLineNamesを呼ぶとリトライ可能になる", async () => {
+    // 4回連続で失敗（初回 + リトライ3回）
+    fetchMock.mockRejectedValue(new Error("Network error"));
+
+    fetchLineNames(["99999"]);
+    await flushPromises();
+
+    // 全リトライ完了まで進める
+    await vi.advanceTimersByTimeAsync(2000);
+    await vi.advanceTimersByTimeAsync(4000);
+    await vi.advanceTimersByTimeAsync(8000);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+
+    // リセットして成功するモックに差し替え
+    fetchMock.mockReset();
+    mockFetchResponse([{ id: 99999, nameShort: "テスト線" }]);
+
+    // 再度呼び出し可能（resolvedIdsに入っていないため）
+    fetchLineNames(["99999"]);
+    await flushPromises();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(_getCache()).toEqual({ "99999": "テスト線" });
+  });
+
+  it("取得中のIDは重複リクエストされない", async () => {
+    // resolveしないPromiseでペンディング状態を維持
+    let resolveFirst!: (value: unknown) => void;
+    fetchMock.mockReturnValueOnce(
+      new Promise((resolve) => { resolveFirst = resolve; })
+    );
+
+    fetchLineNames(["11302"]);
+
+    // 同じIDで再度呼び出し
+    fetchLineNames(["11302"]);
+
+    // fetchは1回だけ呼ばれる
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    // 最初のリクエストを完了
+    resolveFirst({
+      json: () => Promise.resolve({ data: { lines: [{ id: 11302, nameShort: "山手線" }] } }),
+    });
+    await flushPromises();
+
+    expect(_getCache()).toEqual({ "11302": "山手線" });
   });
 
   it("nameShortが空のlineはキャッシュに入れない", async () => {
@@ -115,20 +213,30 @@ describe("fetchLineNames", () => {
     ]);
 
     fetchLineNames(["11302", "99999"]);
-    await vi.waitFor(() => expect(_getCache()).toHaveProperty("11302"));
+    await flushPromises();
 
     expect(_getCache()).toEqual({ "11302": "山手線" });
     expect(_getCache()).not.toHaveProperty("99999");
   });
 
-  it("APIレスポンスのlinesがundefinedの場合はキャッシュが変更されない", async () => {
+  it("APIレスポンスのlinesがundefinedの場合はキャッシュが変更されずリトライする", async () => {
     fetchMock.mockResolvedValueOnce({
       json: () => Promise.resolve({ data: {} }),
     });
+    mockFetchResponse([{ id: 11302, nameShort: "山手線" }]);
 
     fetchLineNames(["11302"]);
-    await new Promise((r) => setTimeout(r, 10));
+    await flushPromises();
+
+    // 初回はlinesがundefinedなのでキャッシュは空
     expect(_getCache()).toEqual({});
+
+    // 2秒後にリトライ
+    await vi.advanceTimersByTimeAsync(2000);
+
+    // リトライで成功
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(_getCache()).toEqual({ "11302": "山手線" });
   });
 
   it("subscribeでリスナーが通知される", async () => {
@@ -141,7 +249,7 @@ describe("fetchLineNames", () => {
     // fetchLineNamesの内部でnotifyが呼ばれることを間接的にテスト
     mockFetchResponse([{ id: 11302, nameShort: "山手線" }]);
     fetchLineNames(["11302"]);
-    await vi.waitFor(() => expect(_getCache()).toHaveProperty("11302"));
+    await flushPromises();
     // キャッシュが更新されたことで正しい値が入っている
     expect(_getCache()["11302"]).toBe("山手線");
   });
@@ -153,7 +261,7 @@ describe("fetchLineNames", () => {
     ]);
 
     fetchLineNames(["11302", "24006"]);
-    await vi.waitFor(() => expect(_getColorCache()).toHaveProperty("11302"));
+    await flushPromises();
 
     expect(_getColorCache()).toEqual({
       "11302": "#80C241",
@@ -167,7 +275,7 @@ describe("fetchLineNames", () => {
     ]);
 
     fetchLineNames(["11302"]);
-    await vi.waitFor(() => expect(_getColorCache()).toHaveProperty("11302"));
+    await flushPromises();
 
     expect(_getColorCache()).toEqual({ "11302": "#80C241" });
   });
@@ -179,7 +287,7 @@ describe("fetchLineNames", () => {
     ]);
 
     fetchLineNames(["11302", "24006"]);
-    await vi.waitFor(() => expect(_getColorCache()).toHaveProperty("11302"));
+    await flushPromises();
 
     expect(_getColorCache()).toEqual({ "11302": "#80C241" });
     expect(_getColorCache()).not.toHaveProperty("24006");
