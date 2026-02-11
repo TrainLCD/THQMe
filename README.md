@@ -65,7 +65,7 @@ pnpm dev
 
 ## Project Structure
 
-```
+```text
 ├── app/                  # Screens (Expo Router file-based routing)
 │   ├── (tabs)/           # Tab navigation (Home, Timeline, Map, Logs)
 │   ├── dev/              # Development routes
