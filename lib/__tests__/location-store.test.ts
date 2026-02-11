@@ -33,14 +33,19 @@ function locationReducer(state: LocationState, action: LocationAction): Location
         [update, ...state.updates],
         MAX_UPDATES_PER_DEVICE
       );
-      const deviceIds = Array.from(
-        new Set([update.device, ...state.deviceIds])
-      );
+      const deviceIds = state.deviceIds.includes(update.device)
+        ? state.deviceIds
+        : [...state.deviceIds, update.device];
+      const lineIds =
+        update.line_id && !state.lineIds.includes(update.line_id)
+          ? [...state.lineIds, update.line_id]
+          : state.lineIds;
       return {
         ...state,
         updates: newUpdates,
         messageCount: state.messageCount + 1,
         deviceIds,
+        lineIds,
       };
     }
     case "ADD_LOG": {
@@ -61,7 +66,7 @@ function locationReducer(state: LocationState, action: LocationAction): Location
     case "SET_ERROR":
       return { ...state, error: action.payload };
     case "CLEAR_UPDATES":
-      return { ...state, updates: [], logs: [], messageCount: 0, deviceIds: [] };
+      return { ...state, updates: [], logs: [], messageCount: 0, deviceIds: [], lineIds: [] };
     case "LOAD_INITIAL_STATE":
       return { ...state, ...action.payload };
     default:
@@ -191,6 +196,37 @@ describe("Location Store Reducer", () => {
       expect(deviceACounts).toBe(500);
       expect(deviceBCounts).toBe(1);
     });
+
+    it("should add line_id to lineIds list", () => {
+      const update = createMockUpdate({ line_id: "line-abc" });
+      const action: LocationAction = { type: "ADD_UPDATE", payload: update };
+
+      const newState = locationReducer(initialState, action);
+
+      expect(newState.lineIds).toContain("line-abc");
+    });
+
+    it("should not duplicate line_id in lineIds", () => {
+      const stateWithLine: LocationState = {
+        ...initialState,
+        lineIds: ["line-abc"],
+      };
+      const update = createMockUpdate({ line_id: "line-abc" });
+      const action: LocationAction = { type: "ADD_UPDATE", payload: update };
+
+      const newState = locationReducer(stateWithLine, action);
+
+      expect(newState.lineIds.filter(l => l === "line-abc")).toHaveLength(1);
+    });
+
+    it("should not add null line_id to lineIds", () => {
+      const update = createMockUpdate({ line_id: null });
+      const action: LocationAction = { type: "ADD_UPDATE", payload: update };
+
+      const newState = locationReducer(initialState, action);
+
+      expect(newState.lineIds).toHaveLength(0);
+    });
   });
 
   describe("ADD_LOG", () => {
@@ -316,6 +352,7 @@ describe("Location Store Reducer", () => {
         logs: [createMockLog(), createMockLog()],
         messageCount: 100,
         deviceIds: ["device-a", "device-b"],
+        lineIds: ["line-abc", "line-def"],
       };
       const action: LocationAction = { type: "CLEAR_UPDATES" };
       
@@ -325,6 +362,7 @@ describe("Location Store Reducer", () => {
       expect(newState.logs).toHaveLength(0);
       expect(newState.messageCount).toBe(0);
       expect(newState.deviceIds).toHaveLength(0);
+      expect(newState.lineIds).toHaveLength(0);
     });
   });
 
