@@ -102,6 +102,12 @@ export default function MapScreen() {
 
   // マップ背景をタップしたら吹き出しを明示的に閉じる
   const handleMapPress = useCallback(() => {
+    if (selectedMarkerIdRef.current) {
+      const marker = markerRefs.current.get(selectedMarkerIdRef.current);
+      if (marker) {
+        marker.hideCallout();
+      }
+    }
     selectedMarkerIdRef.current = null;
   }, []);
 
