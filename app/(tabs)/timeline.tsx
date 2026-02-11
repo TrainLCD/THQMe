@@ -25,6 +25,7 @@ import { useLocation } from "@/lib/location-store";
 import type { LocationUpdate, MovingState } from "@/lib/types/location";
 import { cn } from "@/lib/utils";
 import { useColors } from "@/hooks/use-colors";
+import { useLineNames } from "@/hooks/use-line-names";
 
 // 状態フィルターオプションの定義
 const MOVING_STATES: { value: MovingState; label: string }[] = [
@@ -36,7 +37,7 @@ const MOVING_STATES: { value: MovingState; label: string }[] = [
 
 // アコーディオンコンテンツの最大高さ（アニメーション用）
 const ACCORDION_MAX_HEIGHT_BASE = 200; // 状態フィルターのみ
-const ACCORDION_MAX_HEIGHT_WITH_DEVICE = 300; // 状態 + デバイスフィルター
+const ACCORDION_MAX_HEIGHT_WITH_EXTRAS = 400; // 状態 + デバイス + 路線IDフィルター
 
 export default function TimelineScreen() {
   const { state, clearUpdates } = useLocation();
@@ -46,7 +47,9 @@ export default function TimelineScreen() {
   // 複数選択用のSet
   const [selectedStates, setSelectedStates] = useState<Set<MovingState>>(new Set());
   const [selectedDevices, setSelectedDevices] = useState<Set<string>>(new Set());
+  const [selectedRoutes, setSelectedRoutes] = useState<Set<string>>(new Set());
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+  const lineNames = useLineNames(state.lineIds);
 
   // アニメーション用の共有値
   const rotateValue = useSharedValue(0);
@@ -69,12 +72,13 @@ export default function TimelineScreen() {
     };
   });
 
-  // デバイスフィルターがある場合は最大高さを増やす
-  const maxContentHeight = state.deviceIds.length > 0
-    ? ACCORDION_MAX_HEIGHT_WITH_DEVICE
+  // フィルター項目数に応じて最大高さを調整
+  const hasExtras = state.deviceIds.length > 0 || state.lineIds.length > 0;
+  const maxContentHeight = hasExtras
+    ? ACCORDION_MAX_HEIGHT_WITH_EXTRAS
     : ACCORDION_MAX_HEIGHT_BASE;
 
-  // Filter updates by search query, selected states and devices
+  // Filter updates by search query, selected states, devices and routes
   const filteredUpdates = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
     return state.updates.filter((update) => {
@@ -84,7 +88,8 @@ export default function TimelineScreen() {
         const stateStr = update.state?.toLowerCase() || "";
         const lat = update.coords?.latitude?.toString() || "";
         const lng = update.coords?.longitude?.toString() || "";
-        if (!device.includes(query) && !stateStr.includes(query) && !lat.includes(query) && !lng.includes(query)) {
+        const lineId = update.line_id?.toLowerCase() || "";
+        if (!device.includes(query) && !stateStr.includes(query) && !lat.includes(query) && !lng.includes(query) && !lineId.includes(query)) {
           return false;
         }
       }
@@ -96,12 +101,18 @@ export default function TimelineScreen() {
       if (selectedDevices.size > 0 && !selectedDevices.has(update.device)) {
         return false;
       }
+      // 路線IDフィルター（空の場合は全て表示）
+      if (selectedRoutes.size > 0) {
+        if (!update.line_id || !selectedRoutes.has(update.line_id)) {
+          return false;
+        }
+      }
       return true;
     });
-  }, [state.updates, searchQuery, selectedStates, selectedDevices]);
+  }, [state.updates, searchQuery, selectedStates, selectedDevices, selectedRoutes]);
 
   // フィルターが適用されているかどうか
-  const hasActiveFilter = searchQuery.trim() !== "" || selectedStates.size > 0 || selectedDevices.size > 0;
+  const hasActiveFilter = searchQuery.trim() !== "" || selectedStates.size > 0 || selectedDevices.size > 0 || selectedRoutes.size > 0;
 
   const handleClearData = useCallback(() => {
     if (Platform.OS === "web") {
@@ -137,6 +148,26 @@ export default function TimelineScreen() {
       setSelectedStates(new Set());
     } else {
       setSelectedStates((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(value)) {
+          newSet.delete(value);
+        } else {
+          newSet.add(value);
+        }
+        return newSet;
+      });
+    }
+  }, []);
+
+  // 路線IDフィルターの選択/解除
+  const handleRouteSelect = useCallback((value: string | null) => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    if (value === null) {
+      setSelectedRoutes(new Set());
+    } else {
+      setSelectedRoutes((prev) => {
         const newSet = new Set(prev);
         if (newSet.has(value)) {
           newSet.delete(value);
@@ -247,7 +278,7 @@ export default function TimelineScreen() {
                 <Text className="text-base font-medium text-foreground">
                   フィルター
                 </Text>
-                {(selectedStates.size > 0 || selectedDevices.size > 0) && (
+                {(selectedStates.size > 0 || selectedDevices.size > 0 || selectedRoutes.size > 0) && (
                   <View className="ml-2 bg-primary px-2 py-0.5 rounded-full">
                     <Text className="text-xs text-white font-medium">適用中</Text>
                   </View>
@@ -386,6 +417,70 @@ export default function TimelineScreen() {
                   </ScrollView>
                 </View>
               )}
+
+              {/* Route ID Filter (only show if there are routes) */}
+              {state.lineIds.length > 0 && (
+                <View className="mt-3">
+                  <Text className="text-sm text-muted mb-2">路線</Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.filterScrollContent}
+                  >
+                    {/* すべてボタン */}
+                    <TouchableOpacity
+                      onPress={() => handleRouteSelect(null)}
+                      activeOpacity={0.7}
+                      style={styles.filterButton}
+                    >
+                      <View
+                        className={cn(
+                          "px-3 py-2 rounded-full border",
+                          selectedRoutes.size === 0
+                            ? "bg-primary border-primary"
+                            : "bg-background border-border"
+                        )}
+                      >
+                        <Text
+                          className={cn(
+                            "text-sm font-medium",
+                            selectedRoutes.size === 0 ? "text-white" : "text-foreground"
+                          )}
+                        >
+                          すべて
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                    {state.lineIds.map((lineId) => (
+                      <TouchableOpacity
+                        key={lineId}
+                        onPress={() => handleRouteSelect(lineId)}
+                        activeOpacity={0.7}
+                        style={styles.filterButton}
+                      >
+                        <View
+                          className={cn(
+                            "px-3 py-2 rounded-full border",
+                            selectedRoutes.has(lineId)
+                              ? "bg-primary border-primary"
+                              : "bg-background border-border"
+                          )}
+                        >
+                          <Text
+                            className={cn(
+                              "text-sm font-medium",
+                              selectedRoutes.has(lineId) ? "text-white" : "text-foreground"
+                            )}
+                            numberOfLines={1}
+                          >
+                            {lineNames[lineId] ? <><Text style={{ fontWeight: "bold" }}>{lineNames[lineId]}</Text>({lineId})</> : lineId}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
             </View>
           </Animated.View>
         </View>
@@ -409,15 +504,19 @@ export default function TimelineScreen() {
     [
       state.connectionStatus,
       state.deviceIds,
+      state.lineIds,
+      lineNames,
       state.updates.length,
       searchQuery,
       selectedStates,
       selectedDevices,
+      selectedRoutes,
       filteredUpdates.length,
       hasActiveFilter,
       handleClearData,
       handleStateSelect,
       handleDeviceSelect,
+      handleRouteSelect,
       handleClearSearch,
       toggleFilter,
       arrowStyle,

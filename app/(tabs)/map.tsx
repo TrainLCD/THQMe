@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, Fragment } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo, Fragment } from "react";
 import {
   Text,
   View,
@@ -27,6 +27,7 @@ import {
 } from "@/hooks/use-device-trajectory";
 import { getDeviceColor } from "@/constants/map-colors";
 import type { MovingState } from "@/lib/types/location";
+import { useLineNames } from "@/hooks/use-line-names";
 
 // react-native-maps は Web では使えないので条件付きインポート
 let MapView: typeof import("react-native-maps").default | null = null;
@@ -47,26 +48,42 @@ type MapViewRef = import("react-native-maps").default;
 type MapMarkerRef = { showCallout: () => void; hideCallout: () => void };
 
 // アコーディオンコンテンツの最大高さ（アニメーション用）
-const ACCORDION_MAX_HEIGHT = 200;
+const ACCORDION_MAX_HEIGHT_BASE = 100;
+const ACCORDION_MAX_HEIGHT_WITH_ROUTES = 200;
 
 export default function MapScreen() {
   const { state } = useLocation();
   const [selectedDevices, setSelectedDevices] = useState<Set<string>>(new Set());
+  const [selectedRoutes, setSelectedRoutes] = useState<Set<string>>(new Set());
   const [isFilterExpanded, setIsFilterExpanded] = useState(true);
+  const lineNames = useLineNames(state.lineIds);
   const mapRef = useRef<MapViewRef | null>(null);
   const [isFollowing, setIsFollowing] = useState(true);
   const selectedMarkerIdRef = useRef<string | null>(null);
   const markerRefs = useRef<Map<string, MapMarkerRef>>(new Map());
 
+  // フィルター項目数に応じて最大高さを調整
+  const maxAccordionHeight = state.lineIds.length > 0
+    ? ACCORDION_MAX_HEIGHT_WITH_ROUTES
+    : ACCORDION_MAX_HEIGHT_BASE;
+
   // アニメーション用の共有値（開いた状態で初期化）
   const rotateValue = useSharedValue(180);
-  const maxHeightValue = useSharedValue(ACCORDION_MAX_HEIGHT);
+  const maxHeightValue = useSharedValue(maxAccordionHeight);
   const opacityValue = useSharedValue(1);
 
   const colors = useColors();
 
+  // 路線IDでフィルタリングされたupdates
+  const filteredUpdates = useMemo(() => {
+    if (selectedRoutes.size === 0) return state.updates;
+    return state.updates.filter(
+      (update) => update.line_id && selectedRoutes.has(update.line_id)
+    );
+  }, [state.updates, selectedRoutes]);
+
   // 軌跡データを計算
-  const trajectories = useDeviceTrajectory(state.updates, selectedDevices);
+  const trajectories = useDeviceTrajectory(filteredUpdates, selectedDevices);
 
   // 矢印の回転アニメーション
   const arrowStyle = useAnimatedStyle(() => {
@@ -155,6 +172,26 @@ export default function MapScreen() {
     });
   }, [trajectories]);
 
+  // 路線IDフィルターの選択/解除
+  const handleRouteSelect = useCallback((value: string | null) => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    if (value === null) {
+      setSelectedRoutes(new Set());
+    } else {
+      setSelectedRoutes((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(value)) {
+          newSet.delete(value);
+        } else {
+          newSet.add(value);
+        }
+        return newSet;
+      });
+    }
+  }, []);
+
   // デバイスフィルターの選択/解除
   const handleDeviceSelect = useCallback((value: string | null) => {
     if (Platform.OS !== "web") {
@@ -190,9 +227,9 @@ export default function MapScreen() {
     };
 
     rotateValue.value = withTiming(newValue ? 180 : 0, animConfig);
-    maxHeightValue.value = withTiming(newValue ? ACCORDION_MAX_HEIGHT : 0, animConfig);
+    maxHeightValue.value = withTiming(newValue ? maxAccordionHeight : 0, animConfig);
     opacityValue.value = withTiming(newValue ? 1 : 0, { duration: newValue ? 250 : 150 });
-  }, [isFilterExpanded, rotateValue, maxHeightValue, opacityValue]);
+  }, [isFilterExpanded, rotateValue, maxHeightValue, opacityValue, maxAccordionHeight]);
 
   // Web用のフォールバック
   if (Platform.OS === "web") {
@@ -224,7 +261,7 @@ export default function MapScreen() {
           <ConnectionStatusBadge status={state.connectionStatus} />
         </View>
 
-        {/* Device Filter Accordion */}
+        {/* Filter Accordion */}
         <View className="mb-4 bg-surface rounded-xl border border-border overflow-hidden">
           {/* Accordion Header */}
           <TouchableOpacity
@@ -235,12 +272,12 @@ export default function MapScreen() {
             <View className="flex-1 flex-row items-center justify-between px-4">
               <View className="flex-row items-center">
                 <Text className="text-base font-medium text-foreground">
-                  デバイス
+                  フィルター
                 </Text>
-                {selectedDevices.size > 0 && (
+                {(selectedDevices.size > 0 || selectedRoutes.size > 0) && (
                   <View className="ml-2 bg-primary px-2 py-0.5 rounded-full">
                     <Text className="text-xs text-white font-medium">
-                      {selectedDevices.size}件選択中
+                      適用中
                     </Text>
                   </View>
                 )}
@@ -254,7 +291,9 @@ export default function MapScreen() {
           {/* Accordion Content with Animation */}
           <Animated.View style={contentStyle}>
             <View className="px-4 pb-4 border-t border-border">
+              {/* Device Filter */}
               <View className="mt-3">
+                <Text className="text-sm text-muted mb-2">デバイス</Text>
                 {state.deviceIds.length > 0 ? (
                   <ScrollView
                     horizontal
@@ -320,6 +359,70 @@ export default function MapScreen() {
                   <Text className="text-sm text-muted">デバイスがありません</Text>
                 )}
               </View>
+
+              {/* Route ID Filter (only show if there are routes) */}
+              {state.lineIds.length > 0 && (
+                <View className="mt-3">
+                  <Text className="text-sm text-muted mb-2">路線</Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.filterScrollContent}
+                  >
+                    {/* すべてボタン */}
+                    <TouchableOpacity
+                      onPress={() => handleRouteSelect(null)}
+                      activeOpacity={0.7}
+                      style={styles.filterButton}
+                    >
+                      <View
+                        className={cn(
+                          "px-3 py-2 rounded-full border",
+                          selectedRoutes.size === 0
+                            ? "bg-primary border-primary"
+                            : "bg-background border-border"
+                        )}
+                      >
+                        <Text
+                          className={cn(
+                            "text-sm font-medium",
+                            selectedRoutes.size === 0 ? "text-white" : "text-foreground"
+                          )}
+                        >
+                          すべて
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                    {state.lineIds.map((lineId) => (
+                      <TouchableOpacity
+                        key={lineId}
+                        onPress={() => handleRouteSelect(lineId)}
+                        activeOpacity={0.7}
+                        style={styles.filterButton}
+                      >
+                        <View
+                          className={cn(
+                            "px-3 py-2 rounded-full border",
+                            selectedRoutes.has(lineId)
+                              ? "bg-primary border-primary"
+                              : "bg-background border-border"
+                          )}
+                        >
+                          <Text
+                            className={cn(
+                              "text-sm font-medium",
+                              selectedRoutes.has(lineId) ? "text-white" : "text-foreground"
+                            )}
+                            numberOfLines={1}
+                          >
+                            {lineNames[lineId] ? <><Text style={{ fontWeight: "bold" }}>{lineNames[lineId]}</Text>({lineId})</> : lineId}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
             </View>
           </Animated.View>
         </View>
@@ -399,6 +502,9 @@ export default function MapScreen() {
                                   </View>
                                 </View>
                                 <Text style={styles.calloutDescription}>最新位置</Text>
+                                {trajectory.latestLineId && lineNames[trajectory.latestLineId] && (
+                                  <Text style={styles.calloutLineName}>🚆 {lineNames[trajectory.latestLineId]}</Text>
+                                )}
                                 <View style={styles.calloutMetrics}>
                                   <Text style={styles.calloutMetricText}>🏎️ {formatSpeed(trajectory.latestSpeed)}</Text>
                                   <Text style={styles.calloutMetricText}>🎯 {formatAccuracy(trajectory.latestAccuracy)}</Text>
@@ -489,6 +595,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#687076",
     marginTop: 4,
+    marginBottom: 4,
+  },
+  calloutLineName: {
+    fontSize: 12,
+    color: "#687076",
+    marginTop: 2,
   },
   calloutMetrics: {
     flexDirection: "row",

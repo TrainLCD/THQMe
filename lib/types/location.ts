@@ -34,6 +34,7 @@ export interface LocationUpdate {
   type: "location_update";
   battery_level: number;
   battery_state: BatteryState | null;
+  line_id: string | null;
 }
 
 /**
@@ -101,6 +102,7 @@ export interface LocationState {
   error: string | null;
   messageCount: number;
   deviceIds: string[];
+  lineIds: string[];
 }
 
 /**

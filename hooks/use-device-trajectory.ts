@@ -15,6 +15,7 @@ export interface DeviceTrajectory {
   latestAccuracy: number | null | undefined;
   latestBatteryLevel: number | null;
   latestBatteryState: BatteryState | number | null;
+  latestLineId: string | null;
 }
 
 /**
@@ -67,6 +68,7 @@ export function useDeviceTrajectory(
         latestAccuracy: latestUpdate?.coords.accuracy ?? null,
         latestBatteryLevel: latestUpdate?.battery_level ?? null,
         latestBatteryState: latestUpdate?.battery_state ?? null,
+        latestLineId: latestUpdate?.line_id ?? null,
       });
     }
 

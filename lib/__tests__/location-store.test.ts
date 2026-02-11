@@ -77,6 +77,7 @@ const initialState: LocationState = {
   error: null,
   messageCount: 0,
   deviceIds: [],
+  lineIds: [],
 };
 
 const createMockUpdate = (overrides: Partial<LocationUpdate> = {}): LocationUpdate => ({
@@ -91,6 +92,9 @@ const createMockUpdate = (overrides: Partial<LocationUpdate> = {}): LocationUpda
   state: "moving" as MovingState,
   timestamp: Date.now(),
   type: "location_update",
+  battery_level: 0.8,
+  battery_state: null,
+  line_id: null,
   ...overrides,
 });
 
