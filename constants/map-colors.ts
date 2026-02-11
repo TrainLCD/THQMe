@@ -13,15 +13,3 @@ export const MAP_TRAJECTORY_COLORS = [
   "#BB8FCE", // 紫
   "#85C1E9", // スカイブルー
 ] as const;
-
-/**
- * デバイスIDからPolylineの色を取得
- * デバイスIDのハッシュ値を使って色を決定する
- */
-export function getDeviceColor(deviceId: string, deviceIds: string[]): string {
-  const index = deviceIds.indexOf(deviceId);
-  if (index === -1) {
-    return MAP_TRAJECTORY_COLORS[0];
-  }
-  return MAP_TRAJECTORY_COLORS[index % MAP_TRAJECTORY_COLORS.length];
-}
