@@ -8,7 +8,7 @@ interface LocationCardProps {
   update: LocationUpdate;
 }
 
-const stateConfig: Record<MovingState, { label: string; bgClass: string; textClass: string; colorKey: keyof ReturnType<typeof useColors> }> = {
+export const stateConfig: Record<MovingState, { label: string; bgClass: string; textClass: string; colorKey: keyof ReturnType<typeof useColors> }> = {
   arrived: { label: "到着", bgClass: "bg-success/20", textClass: "text-success", colorKey: "success" },
   approaching: { label: "接近中", bgClass: "bg-warning/20", textClass: "text-warning", colorKey: "warning" },
   passing: { label: "通過中", bgClass: "bg-primary/20", textClass: "text-primary", colorKey: "primary" },
@@ -16,7 +16,7 @@ const stateConfig: Record<MovingState, { label: string; bgClass: string; textCla
 };
 
 // 未知のstate値に対するフォールバック
-const defaultStateConfig = { label: "不明", bgClass: "bg-muted/20", textClass: "text-muted", colorKey: "muted" as const };
+export const defaultStateConfig = { label: "不明", bgClass: "bg-muted/20", textClass: "text-muted", colorKey: "muted" as const };
 
 function formatCoordinate(value: number, type: "lat" | "lng"): string {
   const abs = Math.abs(value);

@@ -17,18 +17,22 @@ import Animated, {
 
 import { ScreenContainer } from "@/components/screen-container";
 import { ConnectionStatusBadge } from "@/components/connection-status";
+import { stateConfig, defaultStateConfig } from "@/components/location-card";
 import { useLocation } from "@/lib/location-store";
+import { useColors } from "@/hooks/use-colors";
 import { cn } from "@/lib/utils";
 import {
   useDeviceTrajectory,
   getAllCoordinates,
 } from "@/hooks/use-device-trajectory";
 import { getDeviceColor } from "@/constants/map-colors";
+import type { MovingState } from "@/lib/types/location";
 
 // react-native-maps は Web では使えないので条件付きインポート
 let MapView: typeof import("react-native-maps").default | null = null;
 let Polyline: typeof import("react-native-maps").Polyline | null = null;
 let Marker: typeof import("react-native-maps").Marker | null = null;
+let Callout: typeof import("react-native-maps").Callout | null = null;
 
 if (Platform.OS !== "web") {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -36,6 +40,7 @@ if (Platform.OS !== "web") {
   MapView = Maps.default;
   Polyline = Maps.Polyline;
   Marker = Maps.Marker;
+  Callout = Maps.Callout;
 }
 
 type MapViewRef = import("react-native-maps").default;
@@ -57,6 +62,8 @@ export default function MapScreen() {
   const rotateValue = useSharedValue(180);
   const maxHeightValue = useSharedValue(ACCORDION_MAX_HEIGHT);
   const opacityValue = useSharedValue(1);
+
+  const colors = useColors();
 
   // 軌跡データを計算
   const trajectories = useDeviceTrajectory(state.updates, selectedDevices);
@@ -353,24 +360,51 @@ export default function MapScreen() {
                         strokeWidth={4}
                       />
                     )}
-                    {Marker && trajectory.latestPosition && (
-                      <Marker
-                        ref={(ref) => {
-                          if (ref) {
-                            markerRefs.current.set(trajectory.deviceId, ref);
-                          } else {
-                            markerRefs.current.delete(trajectory.deviceId);
-                          }
-                        }}
-                        coordinate={trajectory.latestPosition}
-                        title={trajectory.deviceId}
-                        description="最新位置"
-                        pinColor={getDeviceColor(trajectory.deviceId, state.deviceIds)}
-                        stopPropagation
-                        onPress={() => handleMarkerPress(trajectory.deviceId)}
-                        onCalloutPress={() => handleCalloutPress(trajectory.deviceId)}
-                      />
-                    )}
+                    {Marker && trajectory.latestPosition && (() => {
+                      const stateConf = trajectory.latestState
+                        ? stateConfig[trajectory.latestState as MovingState] || defaultStateConfig
+                        : defaultStateConfig;
+                      const stateLabel = stateConf.label === "不明" && trajectory.latestState
+                        ? String(trajectory.latestState)
+                        : stateConf.label;
+                      const borderColor = colors[stateConf.colorKey];
+
+                      return (
+                        <Marker
+                          ref={(ref) => {
+                            if (ref) {
+                              markerRefs.current.set(trajectory.deviceId, ref);
+                            } else {
+                              markerRefs.current.delete(trajectory.deviceId);
+                            }
+                          }}
+                          coordinate={trajectory.latestPosition}
+                          pinColor={getDeviceColor(trajectory.deviceId, state.deviceIds)}
+                          stopPropagation
+                          onPress={() => handleMarkerPress(trajectory.deviceId)}
+                          onCalloutPress={() => handleCalloutPress(trajectory.deviceId)}
+                        >
+                          {Callout && (
+                            <Callout tooltip={false}>
+                              <View style={styles.calloutContainer}>
+                                <View style={styles.calloutHeader}>
+                                  <Text style={styles.calloutTitle}>{trajectory.deviceId}</Text>
+                                  <View
+                                    className={cn("px-2 py-0.5 rounded-full", stateConf.bgClass)}
+                                    style={{ borderWidth: 1, borderColor }}
+                                  >
+                                    <Text className={cn("text-xs font-medium", stateConf.textClass)}>
+                                      {stateLabel}
+                                    </Text>
+                                  </View>
+                                </View>
+                                <Text style={styles.calloutDescription}>最新位置</Text>
+                              </View>
+                            </Callout>
+                          )}
+                        </Marker>
+                      );
+                    })()}
                   </Fragment>
                 ))}
               </MapView>
@@ -432,5 +466,23 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "600",
+  },
+  calloutContainer: {
+    minWidth: 140,
+    padding: 8,
+  },
+  calloutHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  calloutTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  calloutDescription: {
+    fontSize: 12,
+    color: "#687076",
+    marginTop: 4,
   },
 });
