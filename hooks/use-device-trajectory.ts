@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { LocationUpdate } from "@/lib/types/location";
+import type { LocationUpdate, MovingState } from "@/lib/types/location";
 
 export interface Coordinate {
   latitude: number;
@@ -10,6 +10,7 @@ export interface DeviceTrajectory {
   deviceId: string;
   coordinates: Coordinate[];
   latestPosition: Coordinate | null;
+  latestState: MovingState | null;
 }
 
 /**
@@ -50,11 +51,14 @@ export function useDeviceTrajectory(
 
       const latestPosition =
         coordinates.length > 0 ? coordinates[coordinates.length - 1] : null;
+      const latestState =
+        sorted.length > 0 ? sorted[sorted.length - 1].state : null;
 
       trajectories.push({
         deviceId,
         coordinates,
         latestPosition,
+        latestState,
       });
     }
 
