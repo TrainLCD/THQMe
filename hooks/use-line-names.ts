@@ -92,9 +92,12 @@ export function fetchLineNames(ids: string[], _retryCount = 0) {
 export function useLineNames(lineIds: string[]): Record<string, string> {
   const lineNames = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
+  // lineIdsの中身が同じなら再取得しないよう、値ベースで比較
+  const lineIdsKey = lineIds.join(",");
   useEffect(() => {
     fetchLineNames(lineIds);
-  }, [lineIds]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lineIdsKey]);
 
   return lineNames;
 }
@@ -102,9 +105,11 @@ export function useLineNames(lineIds: string[]): Record<string, string> {
 export function useLineColors(lineIds: string[]): Record<string, string> {
   const lineColors = useSyncExternalStore(subscribe, getColorSnapshot, getColorSnapshot);
 
+  const lineIdsKey = lineIds.join(",");
   useEffect(() => {
     fetchLineNames(lineIds);
-  }, [lineIds]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lineIdsKey]);
 
   return lineColors;
 }
