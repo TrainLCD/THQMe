@@ -116,6 +116,14 @@ export const LocationCard = memo(function LocationCard({ update }: LocationCardP
         </View>
       </View>
 
+      {/* Route ID */}
+      {update.line_id && (
+        <View className="flex-row items-center mb-2">
+          <Text className="text-base mr-1">🚆</Text>
+          <Text className="text-foreground text-base">{update.line_id}</Text>
+        </View>
+      )}
+
       {/* Coordinates */}
       <View className="flex-row items-center mb-2">
         <Text className="text-base mr-1">📍</Text>

@@ -46,6 +46,7 @@ const initialState: LocationState = {
   error: null,
   messageCount: 0,
   deviceIds: [],
+  lineIds: [],
 };
 
 function locationReducer(state: LocationState, action: LocationAction): LocationState {
@@ -59,11 +60,16 @@ function locationReducer(state: LocationState, action: LocationAction): Location
       const deviceIds = state.deviceIds.includes(update.device)
         ? state.deviceIds
         : [...state.deviceIds, update.device];
+      const lineIds =
+        update.line_id && !state.lineIds.includes(update.line_id)
+          ? [...state.lineIds, update.line_id]
+          : state.lineIds;
       return {
         ...state,
         updates: newUpdates,
         messageCount: state.messageCount + 1,
         deviceIds,
+        lineIds,
       };
     }
     case "ADD_LOG": {
@@ -85,7 +91,7 @@ function locationReducer(state: LocationState, action: LocationAction): Location
     case "SET_ERROR":
       return { ...state, error: action.payload };
     case "CLEAR_UPDATES":
-      return { ...state, updates: [], logs: [], messageCount: 0, deviceIds: [] };
+      return { ...state, updates: [], logs: [], messageCount: 0, deviceIds: [], lineIds: [] };
     case "LOAD_INITIAL_STATE":
       return { ...state, ...action.payload };
     default:
