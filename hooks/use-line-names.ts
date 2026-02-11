@@ -6,8 +6,13 @@ let gqlUrl = Constants.expoConfig?.extra?.trainlcdGqlUrl || "";
 // モジュールレベルのキャッシュ（アプリ全体で共有）
 let cache: Record<string, string> = {};
 let colorCache: Record<string, string> = {};
-const fetchedIds = new Set<string>();
+const resolvedIds = new Set<string>(); // 取得成功済みのID
+const pendingIds = new Set<string>(); // 取得中のID（重複リクエスト防止）
 const listeners = new Set<() => void>();
+
+// リトライ設定
+const MAX_RETRIES = 3;
+const RETRY_DELAYS = [2000, 4000, 8000]; // 指数バックオフ（ms）
 
 function getSnapshot(): Record<string, string> {
   return cache;
@@ -26,11 +31,11 @@ function notify() {
   for (const l of listeners) l();
 }
 
-export function fetchLineNames(ids: string[]) {
-  const newIds = ids.filter((id) => !fetchedIds.has(id));
+export function fetchLineNames(ids: string[], _retryCount = 0) {
+  const newIds = ids.filter((id) => !resolvedIds.has(id) && !pendingIds.has(id));
   if (newIds.length === 0 || !gqlUrl) return;
 
-  for (const id of newIds) fetchedIds.add(id);
+  for (const id of newIds) pendingIds.add(id);
 
   fetch(gqlUrl, {
     method: "POST",
@@ -45,7 +50,10 @@ export function fetchLineNames(ids: string[]) {
       const lines = json?.data?.lines as
         | { id: number; nameShort: string; color: string | null }[]
         | undefined;
-      if (!lines) return;
+      if (!lines) {
+        // レスポンスにlinesがない場合もリトライ対象
+        throw new Error("No lines data in response");
+      }
       let updated = false;
       const nextNames = { ...cache };
       const nextColors = { ...colorCache };
@@ -59,13 +67,26 @@ export function fetchLineNames(ids: string[]) {
           updated = true;
         }
       }
+      // 取得成功: resolvedIdsに追加してpendingIdsから削除
+      for (const id of newIds) {
+        resolvedIds.add(id);
+        pendingIds.delete(id);
+      }
       if (updated) {
         cache = nextNames;
         colorCache = nextColors;
         notify();
       }
     })
-    .catch(() => {});
+    .catch(() => {
+      // 取得失敗: pendingIdsから削除してリトライ
+      for (const id of newIds) pendingIds.delete(id);
+      if (_retryCount < MAX_RETRIES) {
+        setTimeout(() => {
+          fetchLineNames(newIds, _retryCount + 1);
+        }, RETRY_DELAYS[_retryCount]);
+      }
+    });
 }
 
 export function useLineNames(lineIds: string[]): Record<string, string> {
@@ -96,11 +117,12 @@ export function formatLineName(
   return name ? `${name}(${lineId})` : lineId;
 }
 
-/** テスト用: キャッシュとfetchedIdsをリセット */
+/** テスト用: キャッシュとID管理をリセット */
 export function _resetCache() {
   cache = {};
   colorCache = {};
-  fetchedIds.clear();
+  resolvedIds.clear();
+  pendingIds.clear();
   listeners.clear();
 }
 
