@@ -25,7 +25,7 @@ import {
   useDeviceTrajectory,
   getAllCoordinates,
 } from "@/hooks/use-device-trajectory";
-import { getDeviceColor } from "@/constants/map-colors";
+import { MAP_TRAJECTORY_COLORS } from "@/constants/map-colors";
 import type { MovingState } from "@/lib/types/location";
 import { useLineNames, useLineColors } from "@/hooks/use-line-names";
 
@@ -326,7 +326,6 @@ export default function MapScreen() {
                       </View>
                     </TouchableOpacity>
                     {state.deviceIds.map((device) => {
-                      const deviceColor = getDeviceColor(device, state.deviceIds);
                       const isSelected = selectedDevices.has(device);
                       return (
                         <TouchableOpacity
@@ -336,18 +335,18 @@ export default function MapScreen() {
                           style={styles.filterButton}
                         >
                           <View
-                            className="px-3 py-2 rounded-full"
-                            style={{
-                              backgroundColor: isSelected ? deviceColor : "transparent",
-                              borderWidth: 1,
-                              borderColor: deviceColor,
-                            }}
+                            className={cn(
+                              "px-3 py-2 rounded-full border",
+                              isSelected
+                                ? "bg-primary border-primary"
+                                : "bg-background border-border"
+                            )}
                           >
                             <Text
-                              className="text-sm font-medium"
-                              style={{
-                                color: isSelected ? "#FFFFFF" : deviceColor,
-                              }}
+                              className={cn(
+                                "text-sm font-medium",
+                                isSelected ? "text-white" : "text-foreground"
+                              )}
                             >
                               {device}
                             </Text>
@@ -471,7 +470,7 @@ export default function MapScreen() {
                         <Polyline
                           key={`${trajectory.deviceId}-${i}`}
                           coordinates={segment.coordinates}
-                          strokeColor={(segment.lineId && lineColors[segment.lineId]) || getDeviceColor(trajectory.deviceId, state.deviceIds)}
+                          strokeColor={(segment.lineId && lineColors[segment.lineId]) || MAP_TRAJECTORY_COLORS[0]}
                           strokeWidth={4}
                         />
                       )
@@ -485,7 +484,7 @@ export default function MapScreen() {
                         <View
                           style={[
                             styles.startMarker,
-                            { borderColor: (trajectory.segments[0]?.lineId && lineColors[trajectory.segments[0].lineId]) || getDeviceColor(trajectory.deviceId, state.deviceIds) },
+                            { borderColor: (trajectory.segments[0]?.lineId && lineColors[trajectory.segments[0].lineId]) || MAP_TRAJECTORY_COLORS[0] },
                           ]}
                         />
                       </Marker>
@@ -509,7 +508,7 @@ export default function MapScreen() {
                             }
                           }}
                           coordinate={trajectory.latestPosition}
-                          pinColor={(trajectory.latestLineId && lineColors[trajectory.latestLineId]) || getDeviceColor(trajectory.deviceId, state.deviceIds)}
+                          pinColor={(trajectory.latestLineId && lineColors[trajectory.latestLineId]) || MAP_TRAJECTORY_COLORS[0]}
                           stopPropagation
                           onPress={() => handleMarkerPress(trajectory.deviceId)}
                           onCalloutPress={() => handleCalloutPress(trajectory.deviceId)}
