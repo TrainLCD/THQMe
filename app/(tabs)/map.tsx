@@ -47,6 +47,68 @@ if (Platform.OS !== "web") {
 type MapViewRef = import("react-native-maps").default;
 type MapMarkerRef = { showCallout: () => void; hideCallout: () => void };
 
+// 吹き出し内コンテンツ（経過時間をライブ更新するため独立コンポーネント化）
+const TIME_AGO_INTERVAL_MS = 10_000;
+
+function CalloutContent({
+  deviceId,
+  stateLabel,
+  stateConf,
+  borderColor,
+  timestamp,
+  lineId,
+  lineNames,
+  latestSpeed,
+  latestAccuracy,
+  latestBatteryLevel,
+}: {
+  deviceId: string;
+  stateLabel: string;
+  stateConf: { bgClass: string; textClass: string };
+  borderColor: string;
+  timestamp: number | null;
+  lineId: string | null;
+  lineNames: Record<string, string>;
+  latestSpeed: number | null | undefined;
+  latestAccuracy: number | null | undefined;
+  latestBatteryLevel: number | null;
+}) {
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    if (timestamp == null) return;
+    const id = setInterval(() => setTick((t) => t + 1), TIME_AGO_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [timestamp]);
+
+  return (
+    <View style={styles.calloutContainer}>
+      <View style={styles.calloutHeader}>
+        <Text style={styles.calloutTitle}>{deviceId}</Text>
+        <View
+          className={cn("px-2 py-0.5 rounded-full", stateConf.bgClass)}
+          style={{ borderWidth: 1, borderColor }}
+        >
+          <Text className={cn("text-xs font-medium", stateConf.textClass)}>
+            {stateLabel}
+          </Text>
+        </View>
+      </View>
+      <Text style={styles.calloutDescription}>
+        最新位置{timestamp != null ? `・${formatTimeAgo(timestamp)}` : ""}
+      </Text>
+      {lineId && lineNames[lineId] && (
+        <Text style={styles.calloutLineName}>🚆 {lineNames[lineId]}</Text>
+      )}
+      <View style={styles.calloutMetrics}>
+        <Text style={styles.calloutMetricText}>🏎️ {formatSpeed(latestSpeed)}</Text>
+        <Text style={styles.calloutMetricText}>🎯 {formatAccuracy(latestAccuracy)}</Text>
+        <Text style={styles.calloutMetricText}>🔋 {latestBatteryLevel != null ? formatBatteryLevel(latestBatteryLevel) : "-"}</Text>
+      </View>
+    </View>
+  );
+}
+
 // アコーディオンコンテンツの最大高さ（アニメーション用）
 const ACCORDION_MAX_HEIGHT_BASE = 100;
 const ACCORDION_MAX_HEIGHT_WITH_ROUTES = 200;
@@ -515,28 +577,18 @@ export default function MapScreen() {
                         >
                           {Callout && (
                             <Callout tooltip={false}>
-                              <View style={styles.calloutContainer}>
-                                <View style={styles.calloutHeader}>
-                                  <Text style={styles.calloutTitle}>{trajectory.deviceId}</Text>
-                                  <View
-                                    className={cn("px-2 py-0.5 rounded-full", stateConf.bgClass)}
-                                    style={{ borderWidth: 1, borderColor }}
-                                  >
-                                    <Text className={cn("text-xs font-medium", stateConf.textClass)}>
-                                      {stateLabel}
-                                    </Text>
-                                  </View>
-                                </View>
-                                <Text style={styles.calloutDescription}>最新位置{trajectory.latestTimestamp != null ? `・${formatTimeAgo(trajectory.latestTimestamp)}` : ""}</Text>
-                                {trajectory.latestLineId && lineNames[trajectory.latestLineId] && (
-                                  <Text style={styles.calloutLineName}>🚆 {lineNames[trajectory.latestLineId]}</Text>
-                                )}
-                                <View style={styles.calloutMetrics}>
-                                  <Text style={styles.calloutMetricText}>🏎️ {formatSpeed(trajectory.latestSpeed)}</Text>
-                                  <Text style={styles.calloutMetricText}>🎯 {formatAccuracy(trajectory.latestAccuracy)}</Text>
-                                  <Text style={styles.calloutMetricText}>🔋 {trajectory.latestBatteryLevel != null ? formatBatteryLevel(trajectory.latestBatteryLevel) : "-"}</Text>
-                                </View>
-                              </View>
+                              <CalloutContent
+                                deviceId={trajectory.deviceId}
+                                stateLabel={stateLabel}
+                                stateConf={stateConf}
+                                borderColor={borderColor}
+                                timestamp={trajectory.latestTimestamp}
+                                lineId={trajectory.latestLineId}
+                                lineNames={lineNames}
+                                latestSpeed={trajectory.latestSpeed}
+                                latestAccuracy={trajectory.latestAccuracy}
+                                latestBatteryLevel={trajectory.latestBatteryLevel}
+                              />
                             </Callout>
                           )}
                         </Marker>
