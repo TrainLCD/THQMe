@@ -61,6 +61,7 @@ function CalloutContent({
   latestSpeed,
   latestAccuracy,
   latestBatteryLevel,
+  isActive,
 }: {
   deviceId: string;
   stateLabel: string;
@@ -72,14 +73,15 @@ function CalloutContent({
   latestSpeed: number | null | undefined;
   latestAccuracy: number | null | undefined;
   latestBatteryLevel: number | null;
+  isActive: boolean;
 }) {
   const [, forceUpdate] = useReducer((x: number) => x + 1, 0);
 
   useEffect(() => {
-    if (timestamp == null) return;
+    if (!isActive || timestamp == null) return;
     const id = setInterval(forceUpdate, TIME_AGO_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [timestamp]);
+  }, [isActive, timestamp]);
 
   return (
     <View style={styles.calloutContainer}>
@@ -122,6 +124,7 @@ export default function MapScreen() {
   const lineColors = useLineColors(state.lineIds);
   const mapRef = useRef<MapViewRef | null>(null);
   const [isFollowing, setIsFollowing] = useState(true);
+  const [activeCalloutId, setActiveCalloutId] = useState<string | null>(null);
   const selectedMarkerIdRef = useRef<string | null>(null);
   const markerRefs = useRef<Map<string, MapMarkerRef>>(new Map());
 
@@ -185,6 +188,7 @@ export default function MapScreen() {
   // マーカーをタップしたら選択状態にする
   const handleMarkerPress = useCallback((deviceId: string) => {
     selectedMarkerIdRef.current = deviceId;
+    setActiveCalloutId(deviceId);
   }, []);
 
   // マップ背景をタップしたら吹き出しを明示的に閉じる
@@ -196,11 +200,13 @@ export default function MapScreen() {
       }
     }
     selectedMarkerIdRef.current = null;
+    setActiveCalloutId(null);
   }, []);
 
   // 吹き出しをタップしたら閉じる
   const handleCalloutPress = useCallback((deviceId: string) => {
     selectedMarkerIdRef.current = null;
+    setActiveCalloutId(null);
     const marker = markerRefs.current.get(deviceId);
     if (marker) {
       marker.hideCallout();
@@ -588,6 +594,7 @@ export default function MapScreen() {
                                 latestSpeed={trajectory.latestSpeed}
                                 latestAccuracy={trajectory.latestAccuracy}
                                 latestBatteryLevel={trajectory.latestBatteryLevel}
+                                isActive={activeCalloutId === trajectory.deviceId}
                               />
                             </Callout>
                           )}
