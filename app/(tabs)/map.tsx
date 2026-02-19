@@ -156,7 +156,7 @@ export default function MapScreen() {
     }
   }, []);
 
-  // 現在地に戻るボタン
+  // 全体を表示ボタン
   const handleReturnToCurrentLocation = useCallback(() => {
     if (!mapRef.current) return;
     if (Platform.OS !== "web") {
@@ -551,7 +551,7 @@ export default function MapScreen() {
                   onPress={handleReturnToCurrentLocation}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.returnButtonText}>現在地に戻る</Text>
+                  <Text style={styles.returnButtonText}>全体を表示</Text>
                 </TouchableOpacity>
               )}
             </View>
