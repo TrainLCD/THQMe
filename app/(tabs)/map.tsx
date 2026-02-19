@@ -17,7 +17,7 @@ import Animated, {
 
 import { ScreenContainer } from "@/components/screen-container";
 import { ConnectionStatusBadge } from "@/components/connection-status";
-import { stateConfig, defaultStateConfig, formatSpeed, formatAccuracy, formatBatteryLevel } from "@/components/location-card";
+import { stateConfig, defaultStateConfig, formatSpeed, formatAccuracy, formatBatteryLevel, formatTimeAgo } from "@/components/location-card";
 import { useLocation } from "@/lib/location-store";
 import { useColors } from "@/hooks/use-colors";
 import { cn } from "@/lib/utils";
@@ -527,7 +527,7 @@ export default function MapScreen() {
                                     </Text>
                                   </View>
                                 </View>
-                                <Text style={styles.calloutDescription}>最新位置</Text>
+                                <Text style={styles.calloutDescription}>最新位置{trajectory.latestTimestamp != null ? `・${formatTimeAgo(trajectory.latestTimestamp)}` : ""}</Text>
                                 {trajectory.latestLineId && lineNames[trajectory.latestLineId] && (
                                   <Text style={styles.calloutLineName}>🚆 {lineNames[trajectory.latestLineId]}</Text>
                                 )}
