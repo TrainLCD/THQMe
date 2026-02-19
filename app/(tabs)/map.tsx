@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, useMemo, Fragment } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo, useReducer, Fragment } from "react";
 import {
   Text,
   View,
@@ -73,11 +73,11 @@ function CalloutContent({
   latestAccuracy: number | null | undefined;
   latestBatteryLevel: number | null;
 }) {
-  const [, setTick] = useState(0);
+  const [, forceUpdate] = useReducer((x: number) => x + 1, 0);
 
   useEffect(() => {
     if (timestamp == null) return;
-    const id = setInterval(() => setTick((t) => t + 1), TIME_AGO_INTERVAL_MS);
+    const id = setInterval(forceUpdate, TIME_AGO_INTERVAL_MS);
     return () => clearInterval(id);
   }, [timestamp]);
 
