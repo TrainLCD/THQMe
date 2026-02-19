@@ -65,6 +65,9 @@ export function formatBatteryLevel(level: number): string {
 export function formatTimeAgo(timestamp: number): string {
   const now = Date.now();
   const diffMs = now - timestamp;
+  if (diffMs <= 0) {
+    return "たった今";
+  }
   const diffSec = Math.floor(diffMs / 1000);
 
   if (diffSec < 60) {
