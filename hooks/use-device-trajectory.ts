@@ -22,6 +22,7 @@ export interface DeviceTrajectory {
   latestBatteryLevel: number | null;
   latestBatteryState: BatteryState | number | null;
   latestLineId: string | null;
+  latestTimestamp: number | null;
 }
 
 /**
@@ -95,6 +96,7 @@ export function useDeviceTrajectory(
         latestBatteryLevel: latestUpdate?.battery_level ?? null,
         latestBatteryState: latestUpdate?.battery_state ?? null,
         latestLineId: latestUpdate?.line_id ?? null,
+        latestTimestamp: latestUpdate?.timestamp ?? null,
       });
     }
 

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, useMemo, Fragment } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo, useReducer, Fragment } from "react";
 import {
   Text,
   View,
@@ -17,7 +17,7 @@ import Animated, {
 
 import { ScreenContainer } from "@/components/screen-container";
 import { ConnectionStatusBadge } from "@/components/connection-status";
-import { stateConfig, defaultStateConfig, formatSpeed, formatAccuracy, formatBatteryLevel } from "@/components/location-card";
+import { stateConfig, defaultStateConfig, formatSpeed, formatAccuracy, formatBatteryLevel, formatTimeAgo } from "@/components/location-card";
 import { useLocation } from "@/lib/location-store";
 import { useColors } from "@/hooks/use-colors";
 import { cn } from "@/lib/utils";
@@ -47,6 +47,70 @@ if (Platform.OS !== "web") {
 type MapViewRef = import("react-native-maps").default;
 type MapMarkerRef = { showCallout: () => void; hideCallout: () => void };
 
+// 吹き出し内コンテンツ（経過時間をライブ更新するため独立コンポーネント化）
+const TIME_AGO_INTERVAL_MS = 10_000;
+
+function CalloutContent({
+  deviceId,
+  stateLabel,
+  stateConf,
+  borderColor,
+  timestamp,
+  lineId,
+  lineNames,
+  latestSpeed,
+  latestAccuracy,
+  latestBatteryLevel,
+  isActive,
+}: {
+  deviceId: string;
+  stateLabel: string;
+  stateConf: { bgClass: string; textClass: string };
+  borderColor: string;
+  timestamp: number | null;
+  lineId: string | null;
+  lineNames: Record<string, string>;
+  latestSpeed: number | null | undefined;
+  latestAccuracy: number | null | undefined;
+  latestBatteryLevel: number | null;
+  isActive: boolean;
+}) {
+  const [, forceUpdate] = useReducer((x: number) => x + 1, 0);
+
+  useEffect(() => {
+    if (!isActive || timestamp == null) return;
+    const id = setInterval(forceUpdate, TIME_AGO_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [isActive, timestamp]);
+
+  return (
+    <View style={styles.calloutContainer}>
+      <View style={styles.calloutHeader}>
+        <Text style={styles.calloutTitle}>{deviceId}</Text>
+        <View
+          className={cn("px-2 py-0.5 rounded-full", stateConf.bgClass)}
+          style={{ borderWidth: 1, borderColor }}
+        >
+          <Text className={cn("text-xs font-medium", stateConf.textClass)}>
+            {stateLabel}
+          </Text>
+        </View>
+      </View>
+      <Text style={styles.calloutDescription}>
+        最新位置{timestamp != null ? `・${formatTimeAgo(timestamp)}` : ""}
+      </Text>
+      {lineId && lineNames[lineId] && (
+        <Text style={styles.calloutLineName}>🚆 {lineNames[lineId]}</Text>
+      )}
+      <View style={styles.calloutMetrics}>
+        <Text style={styles.calloutMetricText}>🏎️ {formatSpeed(latestSpeed)}</Text>
+        <Text style={styles.calloutMetricText}>🎯 {formatAccuracy(latestAccuracy)}</Text>
+        <Text style={styles.calloutMetricText}>🔋 {latestBatteryLevel != null ? formatBatteryLevel(latestBatteryLevel) : "-"}</Text>
+      </View>
+    </View>
+  );
+}
+
 // アコーディオンコンテンツの最大高さ（アニメーション用）
 const ACCORDION_MAX_HEIGHT_BASE = 100;
 const ACCORDION_MAX_HEIGHT_WITH_ROUTES = 200;
@@ -60,6 +124,7 @@ export default function MapScreen() {
   const lineColors = useLineColors(state.lineIds);
   const mapRef = useRef<MapViewRef | null>(null);
   const [isFollowing, setIsFollowing] = useState(true);
+  const [activeCalloutId, setActiveCalloutId] = useState<string | null>(null);
   const selectedMarkerIdRef = useRef<string | null>(null);
   const markerRefs = useRef<Map<string, MapMarkerRef>>(new Map());
 
@@ -123,6 +188,7 @@ export default function MapScreen() {
   // マーカーをタップしたら選択状態にする
   const handleMarkerPress = useCallback((deviceId: string) => {
     selectedMarkerIdRef.current = deviceId;
+    setActiveCalloutId(deviceId);
   }, []);
 
   // マップ背景をタップしたら吹き出しを明示的に閉じる
@@ -134,11 +200,13 @@ export default function MapScreen() {
       }
     }
     selectedMarkerIdRef.current = null;
+    setActiveCalloutId(null);
   }, []);
 
   // 吹き出しをタップしたら閉じる
   const handleCalloutPress = useCallback((deviceId: string) => {
     selectedMarkerIdRef.current = null;
+    setActiveCalloutId(null);
     const marker = markerRefs.current.get(deviceId);
     if (marker) {
       marker.hideCallout();
@@ -515,28 +583,19 @@ export default function MapScreen() {
                         >
                           {Callout && (
                             <Callout tooltip={false}>
-                              <View style={styles.calloutContainer}>
-                                <View style={styles.calloutHeader}>
-                                  <Text style={styles.calloutTitle}>{trajectory.deviceId}</Text>
-                                  <View
-                                    className={cn("px-2 py-0.5 rounded-full", stateConf.bgClass)}
-                                    style={{ borderWidth: 1, borderColor }}
-                                  >
-                                    <Text className={cn("text-xs font-medium", stateConf.textClass)}>
-                                      {stateLabel}
-                                    </Text>
-                                  </View>
-                                </View>
-                                <Text style={styles.calloutDescription}>最新位置</Text>
-                                {trajectory.latestLineId && lineNames[trajectory.latestLineId] && (
-                                  <Text style={styles.calloutLineName}>🚆 {lineNames[trajectory.latestLineId]}</Text>
-                                )}
-                                <View style={styles.calloutMetrics}>
-                                  <Text style={styles.calloutMetricText}>🏎️ {formatSpeed(trajectory.latestSpeed)}</Text>
-                                  <Text style={styles.calloutMetricText}>🎯 {formatAccuracy(trajectory.latestAccuracy)}</Text>
-                                  <Text style={styles.calloutMetricText}>🔋 {trajectory.latestBatteryLevel != null ? formatBatteryLevel(trajectory.latestBatteryLevel) : "-"}</Text>
-                                </View>
-                              </View>
+                              <CalloutContent
+                                deviceId={trajectory.deviceId}
+                                stateLabel={stateLabel}
+                                stateConf={stateConf}
+                                borderColor={borderColor}
+                                timestamp={trajectory.latestTimestamp}
+                                lineId={trajectory.latestLineId}
+                                lineNames={lineNames}
+                                latestSpeed={trajectory.latestSpeed}
+                                latestAccuracy={trajectory.latestAccuracy}
+                                latestBatteryLevel={trajectory.latestBatteryLevel}
+                                isActive={activeCalloutId === trajectory.deviceId}
+                              />
                             </Callout>
                           )}
                         </Marker>
