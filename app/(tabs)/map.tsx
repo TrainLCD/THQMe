@@ -88,10 +88,12 @@ function CalloutContent({
       <View style={styles.calloutHeader}>
         <Text style={styles.calloutTitle}>{deviceId}</Text>
         <View
-          className={cn("px-2 py-0.5 rounded-full", stateConf.bgClass)}
-          style={{ borderWidth: 1, borderColor }}
+          style={[
+            styles.calloutBadge,
+            { borderColor, backgroundColor: borderColor + "33" },
+          ]}
         >
-          <Text className={cn("text-xs font-medium", stateConf.textClass)}>
+          <Text style={[styles.calloutBadgeText, { color: borderColor }]}>
             {stateLabel}
           </Text>
         </View>
@@ -682,6 +684,16 @@ const styles = StyleSheet.create({
   calloutTitle: {
     fontSize: 14,
     fontWeight: "600",
+  },
+  calloutBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 9999,
+    borderWidth: 1,
+  },
+  calloutBadgeText: {
+    fontSize: 12,
+    fontWeight: "500",
   },
   calloutDescription: {
     fontSize: 12,
