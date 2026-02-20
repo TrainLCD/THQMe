@@ -90,7 +90,7 @@ function CalloutContent({
         <View
           style={[
             styles.calloutBadge,
-            { borderColor, backgroundColor: borderColor + "33" },
+            { borderColor },
           ]}
         >
           <Text style={[styles.calloutBadgeText, { color: borderColor }]}>
