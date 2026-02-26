@@ -25,7 +25,7 @@ import { useLocation } from "@/lib/location-store";
 import type { LocationUpdate, MovingState } from "@/lib/types/location";
 import { cn } from "@/lib/utils";
 import { useColors } from "@/hooks/use-colors";
-import { useLineNames } from "@/hooks/use-line-names";
+import { useLineNames, useLineColors } from "@/hooks/use-line-names";
 
 // 状態フィルターオプションの定義
 const MOVING_STATES: { value: MovingState; label: string }[] = [
@@ -50,6 +50,7 @@ export default function TimelineScreen() {
   const [selectedRoutes, setSelectedRoutes] = useState<Set<string>>(new Set());
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const lineNames = useLineNames(state.lineIds);
+  const lineColors = useLineColors(state.lineIds);
 
   // アニメーション用の共有値
   const rotateValue = useSharedValue(0);
@@ -451,33 +452,42 @@ export default function TimelineScreen() {
                         </Text>
                       </View>
                     </TouchableOpacity>
-                    {state.lineIds.map((lineId) => (
-                      <TouchableOpacity
-                        key={lineId}
-                        onPress={() => handleRouteSelect(lineId)}
-                        activeOpacity={0.7}
-                        style={styles.filterButton}
-                      >
-                        <View
-                          className={cn(
-                            "px-3 py-2 rounded-full border",
-                            selectedRoutes.has(lineId)
-                              ? "bg-primary border-primary"
-                              : "bg-background border-border"
-                          )}
+                    {state.lineIds.map((lineId) => {
+                      const lineColor = lineColors[lineId];
+                      const isSelected = selectedRoutes.has(lineId);
+                      return (
+                        <TouchableOpacity
+                          key={lineId}
+                          onPress={() => handleRouteSelect(lineId)}
+                          activeOpacity={0.7}
+                          style={styles.filterButton}
                         >
-                          <Text
+                          <View
                             className={cn(
-                              "text-sm font-medium",
-                              selectedRoutes.has(lineId) ? "text-white" : "text-foreground"
+                              "px-3 py-2 rounded-full",
+                              !lineColor && "border",
+                              !lineColor && (isSelected ? "bg-primary border-primary" : "bg-background border-border")
                             )}
-                            numberOfLines={1}
+                            style={lineColor ? {
+                              backgroundColor: isSelected ? lineColor : "transparent",
+                              borderWidth: 1,
+                              borderColor: lineColor,
+                            } : undefined}
                           >
-                            {lineNames[lineId] ? <><Text style={{ fontWeight: "bold" }}>{lineNames[lineId]}</Text>({lineId})</> : lineId}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    ))}
+                            <Text
+                              className={cn(
+                                "text-sm font-medium",
+                                !lineColor && (isSelected ? "text-white" : "text-foreground")
+                              )}
+                              style={lineColor ? { color: isSelected ? "#FFFFFF" : lineColor } : undefined}
+                              numberOfLines={1}
+                            >
+                              {lineNames[lineId] ? <><Text style={{ fontWeight: "bold" }}>{lineNames[lineId]}</Text>({lineId})</> : lineId}
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </ScrollView>
                 </View>
               )}
@@ -506,6 +516,7 @@ export default function TimelineScreen() {
       state.deviceIds,
       state.lineIds,
       lineNames,
+      lineColors,
       state.updates.length,
       searchQuery,
       selectedStates,
