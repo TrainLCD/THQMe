@@ -23,7 +23,7 @@ import { LocationCard } from "@/components/location-card";
 import { ConnectionStatusBadge } from "@/components/connection-status";
 import { useLocation } from "@/lib/location-store";
 import type { LocationUpdate, MovingState } from "@/lib/types/location";
-import { cn } from "@/lib/utils";
+import { cn, getContrastRatio } from "@/lib/utils";
 import { useColors } from "@/hooks/use-colors";
 import { useLineNames, useLineColors } from "@/hooks/use-line-names";
 
@@ -455,6 +455,12 @@ export default function TimelineScreen() {
                     {state.lineIds.map((lineId) => {
                       const lineColor = lineColors[lineId];
                       const isSelected = selectedRoutes.has(lineId);
+                      // For non-selected buttons, use lineColor as text only when it meets
+                      // WCAG AA contrast ratio (4.5:1) against the surface background.
+                      // Otherwise fall back to the theme foreground color.
+                      const unselectedTextColor = lineColor
+                        ? (getContrastRatio(lineColor, colors.surface) >= 4.5 ? lineColor : colors.foreground)
+                        : undefined;
                       return (
                         <TouchableOpacity
                           key={lineId}
@@ -479,7 +485,7 @@ export default function TimelineScreen() {
                                 "text-sm font-medium",
                                 !lineColor && (isSelected ? "text-white" : "text-foreground")
                               )}
-                              style={lineColor ? { color: isSelected ? "#FFFFFF" : lineColor } : undefined}
+                              style={lineColor ? { color: isSelected ? "#FFFFFF" : unselectedTextColor } : undefined}
                               numberOfLines={1}
                             >
                               {lineNames[lineId] ? <><Text style={{ fontWeight: "bold" }}>{lineNames[lineId]}</Text>({lineId})</> : lineId}
@@ -533,6 +539,8 @@ export default function TimelineScreen() {
       arrowStyle,
       contentStyle,
       colors.muted,
+      colors.surface,
+      colors.foreground,
     ]
   );
 
