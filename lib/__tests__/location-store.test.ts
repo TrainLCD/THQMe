@@ -49,7 +49,9 @@ function locationReducer(state: LocationState, action: LocationAction): Location
       };
     }
     case "ADD_LOG": {
-      const log = action.payload;
+      const log = action.payload.id
+        ? action.payload
+        : { ...action.payload, id: `log-gen-test-${Date.now()}` };
       const newLogs = enforcePerDeviceLimit(
         [log, ...state.logs],
         MAX_LOGS_PER_DEVICE

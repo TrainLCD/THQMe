@@ -244,9 +244,7 @@ export default function LogsScreen() {
     []
   );
 
-  const keyExtractor = useCallback((item: LogData, index: number) => {
-    return item.id || `log-${item.timestamp}-${index}`;
-  }, []);
+  const keyExtractor = useCallback((item: LogData) => item.id, []);
 
   const ListEmpty = useMemo(
     () => (
