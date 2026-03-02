@@ -565,6 +565,10 @@ export default function TimelineScreen() {
         ListEmptyComponent={ListEmpty}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        // スクロール中に先頭へアイテムが追加されてもスクロール位置を維持する
+        maintainVisibleContentPosition={{
+          minIndexForVisible: 0,
+        }}
         // パフォーマンス最適化
         initialNumToRender={10}
         maxToRenderPerBatch={5}
