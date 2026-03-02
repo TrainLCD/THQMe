@@ -122,6 +122,10 @@ const createMockLog = (overrides: Partial<LogData> = {}): LogData => ({
 });
 
 describe("Location Store Reducer", () => {
+  beforeEach(() => {
+    logIdCounter = 0;
+  });
+
   describe("ADD_UPDATE", () => {
     it("should add a new location update to the beginning of the list", () => {
       const update = createMockUpdate({ id: "update-1" });
@@ -248,8 +252,11 @@ describe("Location Store Reducer", () => {
     it("should generate a stable ID when payload.id is missing", () => {
       const log = createMockLog();
       // Simulate server sending a log without an id field
-      const logWithoutId = { ...log, id: "" } as LogData;
-      const action: LocationAction = { type: "ADD_LOG", payload: logWithoutId };
+      const { id: _removed, ...logWithoutId } = log;
+      const action: LocationAction = {
+        type: "ADD_LOG",
+        payload: logWithoutId as LogData,
+      };
 
       const newState = locationReducer(initialState, action);
 
@@ -258,6 +265,7 @@ describe("Location Store Reducer", () => {
       expect(newState.logs[0].id).toMatch(/^log-gen-/);
       expect(newState.logs[0].device).toBe(log.device);
       expect(newState.logs[0].log.message).toBe(log.log.message);
+      expect(newState.messageCount).toBe(initialState.messageCount + 1);
     });
 
     it("should limit logs to 500 per device", () => {
