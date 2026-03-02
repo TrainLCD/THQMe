@@ -247,6 +247,7 @@ describe("Location Store Reducer", () => {
       
       expect(newState.logs).toHaveLength(1);
       expect(newState.logs[0]).toEqual(log);
+      expect(newState.messageCount).toBe(initialState.messageCount + 1);
     });
 
     it("should generate a stable ID when payload.id is missing", () => {
