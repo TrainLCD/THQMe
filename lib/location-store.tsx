@@ -16,6 +16,8 @@ const WS_PROTOCOLS = ["thq", `thq-auth-${WS_AUTH_TOKEN}`];
 const MAX_UPDATES_PER_DEVICE = 500; // デバイスごとに保持する最大更新数
 const MAX_LOGS_PER_DEVICE = 500; // デバイスごとに保持する最大ログ数
 
+let logIdCounter = 0;
+
 /**
  * デバイスごとに最大件数を制限する
  * 配列の先頭が最新なので、先頭から数えて制限を超えた古いエントリを除外する
@@ -49,6 +51,23 @@ const initialState: LocationState = {
   lineIds: [],
 };
 
+/**
+ * Update the location state in response to a dispatched location action.
+ *
+ * Handles the following actions:
+ * - ADD_UPDATE: adds a new location update (preserving newest-first order), enforces per-device update limits, updates device and line id lists, and increments the message count.
+ * - ADD_LOG: ensures the log has an id (generates one if missing), adds the log (newest-first), enforces per-device log limits, and increments the message count.
+ * - SET_CONNECTION_STATUS: updates the connection status.
+ * - SET_WS_URL: updates the WebSocket URL.
+ * - SET_ERROR: updates the error message.
+ * - CLEAR_UPDATES: clears updates, logs, messageCount, deviceIds, and lineIds.
+ * - LOAD_INITIAL_STATE: merges the provided payload into the current state.
+ * - default: returns the current state unchanged.
+ *
+ * @param state - The current location state to update
+ * @param action - The action describing the state change to apply
+ * @returns The new location state after applying the action
+ */
 function locationReducer(state: LocationState, action: LocationAction): LocationState {
   switch (action.type) {
     case "ADD_UPDATE": {
@@ -73,7 +92,9 @@ function locationReducer(state: LocationState, action: LocationAction): Location
       };
     }
     case "ADD_LOG": {
-      const log = action.payload;
+      const log = action.payload.id
+        ? action.payload
+        : { ...action.payload, id: `log-gen-${++logIdCounter}` };
       const newLogs = enforcePerDeviceLimit(
         [log, ...state.logs],
         MAX_LOGS_PER_DEVICE

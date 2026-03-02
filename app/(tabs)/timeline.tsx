@@ -37,7 +37,13 @@ const MOVING_STATES: { value: MovingState; label: string }[] = [
 
 // アコーディオンコンテンツの最大高さ（アニメーション用）
 const ACCORDION_MAX_HEIGHT_BASE = 200; // 状態フィルターのみ
-const ACCORDION_MAX_HEIGHT_WITH_EXTRAS = 400; // 状態 + デバイス + 路線IDフィルター
+const ACCORDION_MAX_HEIGHT_WITH_EXTRAS = 400; /**
+ * Renders the timeline screen that displays received location updates with search and multi-level filters.
+ *
+ * The screen provides a searchable, filterable list of location updates with controls for selecting moving states, devices, and route IDs; an expandable filter accordion with animated affordance; connection status, update count, and a clear-data action that prompts for confirmation. The list preserves scroll position when new items are prepended and shows a contextual empty state when no data matches the current filters.
+ *
+ * @returns The rendered timeline screen as a React element
+ */
 
 export default function TimelineScreen() {
   const { state, clearUpdates } = useLocation();
@@ -236,9 +242,29 @@ export default function TimelineScreen() {
 
   const keyExtractor = useCallback((item: LocationUpdate) => item.id, []);
 
-  const ListHeader = useMemo(
+  const ListEmpty = useMemo(
     () => (
-      <View className="mb-4">
+      <View className="flex-1 items-center justify-center py-20">
+        <Text style={{ fontSize: 64, lineHeight: 80 }} className="mb-4">📍</Text>
+        <Text className="text-lg font-semibold text-foreground mb-2">
+          {hasActiveFilter
+            ? "条件に一致するデータがありません"
+            : "データがありません"}
+        </Text>
+        <Text className="text-sm text-muted text-center px-8">
+          {hasActiveFilter
+            ? "フィルター条件を変更してください"
+            : "WebSocketに接続して位置情報データを受信してください"}
+        </Text>
+      </View>
+    ),
+    [hasActiveFilter]
+  );
+
+  return (
+    <ScreenContainer>
+      {/* ヘッダー部分（スクロールに追従して固定表示） */}
+      <View style={styles.stickyHeader}>
         {/* Header with status */}
         <View className="flex-row justify-between items-center mb-4">
           <Text className="text-2xl font-bold text-foreground">タイムライン</Text>
@@ -510,61 +536,18 @@ export default function TimelineScreen() {
           )}
         </View>
       </View>
-    ),
-    [
-      state.connectionStatus,
-      state.deviceIds,
-      state.lineIds,
-      lineNames,
-      lineColors,
-      state.updates.length,
-      searchQuery,
-      selectedStates,
-      selectedDevices,
-      selectedRoutes,
-      filteredUpdates.length,
-      hasActiveFilter,
-      handleClearData,
-      handleStateSelect,
-      handleDeviceSelect,
-      handleRouteSelect,
-      handleClearSearch,
-      toggleFilter,
-      arrowStyle,
-      contentStyle,
-      colors.muted,
-    ]
-  );
 
-  const ListEmpty = useMemo(
-    () => (
-      <View className="flex-1 items-center justify-center py-20">
-        <Text style={{ fontSize: 64, lineHeight: 80 }} className="mb-4">📍</Text>
-        <Text className="text-lg font-semibold text-foreground mb-2">
-          {hasActiveFilter
-            ? "条件に一致するデータがありません"
-            : "データがありません"}
-        </Text>
-        <Text className="text-sm text-muted text-center px-8">
-          {hasActiveFilter
-            ? "フィルター条件を変更してください"
-            : "WebSocketに接続して位置情報データを受信してください"}
-        </Text>
-      </View>
-    ),
-    [hasActiveFilter]
-  );
-
-  return (
-    <ScreenContainer>
       <FlatList
         data={filteredUpdates}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
-        ListHeaderComponent={ListHeader}
         ListEmptyComponent={ListEmpty}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        // スクロール中に先頭へアイテムが追加されてもスクロール位置を維持する
+        maintainVisibleContentPosition={{
+          minIndexForVisible: 0,
+        }}
         // パフォーマンス最適化
         initialNumToRender={10}
         maxToRenderPerBatch={5}
@@ -577,8 +560,14 @@ export default function TimelineScreen() {
 }
 
 const styles = StyleSheet.create({
+  stickyHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
   listContent: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 100,
   },
   filterScrollContent: {

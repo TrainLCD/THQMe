@@ -42,7 +42,16 @@ const LOG_LEVELS: { value: LogLevel; label: string }[] = [
 
 // アコーディオンコンテンツの最大高さ（アニメーション用）
 const ACCORDION_MAX_HEIGHT_BASE = 300; // タイプ + レベルフィルターのみ
-const ACCORDION_MAX_HEIGHT_WITH_DEVICE = 400; // + デバイスフィルター
+const ACCORDION_MAX_HEIGHT_WITH_DEVICE = 400; /**
+ * Render the Logs screen with search, filter controls, and a list of log entries.
+ *
+ * Displays a sticky header with connection status, a search box, and an expandable filter
+ * accordion (type, level, device). Filters, search query, and device presence control the
+ * displayed log list. Provides controls to clear stored logs and preserves scroll position
+ * when new items are prepended.
+ *
+ * @returns The JSX element for the Logs screen containing the header, filter UI, and filtered log list.
+ */
 
 export default function LogsScreen() {
   const { state, clearUpdates } = useLocation();
@@ -244,13 +253,31 @@ export default function LogsScreen() {
     []
   );
 
-  const keyExtractor = useCallback((item: LogData, index: number) => {
-    return item.id || `log-${item.timestamp}-${index}`;
-  }, []);
+  const keyExtractor = useCallback((item: LogData) => item.id, []);
 
-  const ListHeader = useMemo(
+  const ListEmpty = useMemo(
     () => (
-      <View className="mb-4">
+      <View className="flex-1 items-center justify-center py-20">
+        <Text style={{ fontSize: 64, lineHeight: 80 }} className="mb-4">📝</Text>
+        <Text className="text-lg font-semibold text-foreground mb-2">
+          {hasActiveFilter
+            ? "条件に一致するログがありません"
+            : "ログがありません"}
+        </Text>
+        <Text className="text-sm text-muted text-center px-8">
+          {hasActiveFilter
+            ? "フィルター条件を変更してください"
+            : "WebSocketに接続してログデータを受信してください"}
+        </Text>
+      </View>
+    ),
+    [hasActiveFilter]
+  );
+
+  return (
+    <ScreenContainer>
+      {/* ヘッダー部分（スクロールに追従して固定表示） */}
+      <View style={styles.stickyHeader}>
         {/* Header with status */}
         <View className="flex-row justify-between items-center mb-4">
           <Text className="text-2xl font-bold text-foreground">ログ</Text>
@@ -510,58 +537,18 @@ export default function LogsScreen() {
           )}
         </View>
       </View>
-    ),
-    [
-      state.connectionStatus,
-      state.logs.length,
-      searchQuery,
-      selectedTypes,
-      selectedLevels,
-      selectedDevices,
-      logDeviceIds,
-      filteredLogs.length,
-      hasActiveFilter,
-      handleClearData,
-      handleTypeSelect,
-      handleLevelSelect,
-      handleDeviceSelect,
-      handleClearSearch,
-      toggleFilter,
-      arrowStyle,
-      contentStyle,
-      colors.muted,
-    ]
-  );
 
-  const ListEmpty = useMemo(
-    () => (
-      <View className="flex-1 items-center justify-center py-20">
-        <Text style={{ fontSize: 64, lineHeight: 80 }} className="mb-4">📝</Text>
-        <Text className="text-lg font-semibold text-foreground mb-2">
-          {hasActiveFilter
-            ? "条件に一致するログがありません"
-            : "ログがありません"}
-        </Text>
-        <Text className="text-sm text-muted text-center px-8">
-          {hasActiveFilter
-            ? "フィルター条件を変更してください"
-            : "WebSocketに接続してログデータを受信してください"}
-        </Text>
-      </View>
-    ),
-    [hasActiveFilter]
-  );
-
-  return (
-    <ScreenContainer>
       <FlatList
         data={filteredLogs}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
-        ListHeaderComponent={ListHeader}
         ListEmptyComponent={ListEmpty}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        // スクロール中に先頭へアイテムが追加されてもスクロール位置を維持する
+        maintainVisibleContentPosition={{
+          minIndexForVisible: 0,
+        }}
         // パフォーマンス最適化
         initialNumToRender={10}
         maxToRenderPerBatch={5}
@@ -574,8 +561,14 @@ export default function LogsScreen() {
 }
 
 const styles = StyleSheet.create({
+  stickyHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
   listContent: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 100,
   },
   filterScrollContent: {
