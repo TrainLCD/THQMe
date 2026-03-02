@@ -236,9 +236,29 @@ export default function TimelineScreen() {
 
   const keyExtractor = useCallback((item: LocationUpdate) => item.id, []);
 
-  const ListHeader = useMemo(
+  const ListEmpty = useMemo(
     () => (
-      <View className="mb-4">
+      <View className="flex-1 items-center justify-center py-20">
+        <Text style={{ fontSize: 64, lineHeight: 80 }} className="mb-4">📍</Text>
+        <Text className="text-lg font-semibold text-foreground mb-2">
+          {hasActiveFilter
+            ? "条件に一致するデータがありません"
+            : "データがありません"}
+        </Text>
+        <Text className="text-sm text-muted text-center px-8">
+          {hasActiveFilter
+            ? "フィルター条件を変更してください"
+            : "WebSocketに接続して位置情報データを受信してください"}
+        </Text>
+      </View>
+    ),
+    [hasActiveFilter]
+  );
+
+  return (
+    <ScreenContainer>
+      {/* ヘッダー部分（スクロールに追従して固定表示） */}
+      <View style={styles.stickyHeader}>
         {/* Header with status */}
         <View className="flex-row justify-between items-center mb-4">
           <Text className="text-2xl font-bold text-foreground">タイムライン</Text>
@@ -510,58 +530,11 @@ export default function TimelineScreen() {
           )}
         </View>
       </View>
-    ),
-    [
-      state.connectionStatus,
-      state.deviceIds,
-      state.lineIds,
-      lineNames,
-      lineColors,
-      state.updates.length,
-      searchQuery,
-      selectedStates,
-      selectedDevices,
-      selectedRoutes,
-      filteredUpdates.length,
-      hasActiveFilter,
-      handleClearData,
-      handleStateSelect,
-      handleDeviceSelect,
-      handleRouteSelect,
-      handleClearSearch,
-      toggleFilter,
-      arrowStyle,
-      contentStyle,
-      colors.muted,
-    ]
-  );
 
-  const ListEmpty = useMemo(
-    () => (
-      <View className="flex-1 items-center justify-center py-20">
-        <Text style={{ fontSize: 64, lineHeight: 80 }} className="mb-4">📍</Text>
-        <Text className="text-lg font-semibold text-foreground mb-2">
-          {hasActiveFilter
-            ? "条件に一致するデータがありません"
-            : "データがありません"}
-        </Text>
-        <Text className="text-sm text-muted text-center px-8">
-          {hasActiveFilter
-            ? "フィルター条件を変更してください"
-            : "WebSocketに接続して位置情報データを受信してください"}
-        </Text>
-      </View>
-    ),
-    [hasActiveFilter]
-  );
-
-  return (
-    <ScreenContainer>
       <FlatList
         data={filteredUpdates}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
-        ListHeaderComponent={ListHeader}
         ListEmptyComponent={ListEmpty}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
@@ -581,8 +554,14 @@ export default function TimelineScreen() {
 }
 
 const styles = StyleSheet.create({
+  stickyHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
   listContent: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 100,
   },
   filterScrollContent: {
