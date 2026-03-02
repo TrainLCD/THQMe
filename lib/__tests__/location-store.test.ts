@@ -12,6 +12,8 @@ import type {
 const MAX_UPDATES_PER_DEVICE = 500;
 const MAX_LOGS_PER_DEVICE = 500;
 
+let logIdCounter = 0;
+
 function enforcePerDeviceLimit<T extends { device: string }>(
   items: T[],
   maxPerDevice: number
@@ -51,7 +53,7 @@ function locationReducer(state: LocationState, action: LocationAction): Location
     case "ADD_LOG": {
       const log = action.payload.id
         ? action.payload
-        : { ...action.payload, id: `log-gen-test-${Date.now()}` };
+        : { ...action.payload, id: `log-gen-${++logIdCounter}` };
       const newLogs = enforcePerDeviceLimit(
         [log, ...state.logs],
         MAX_LOGS_PER_DEVICE
@@ -59,6 +61,7 @@ function locationReducer(state: LocationState, action: LocationAction): Location
       return {
         ...state,
         logs: newLogs,
+        messageCount: state.messageCount + 1,
       };
     }
     case "SET_CONNECTION_STATUS":
@@ -240,6 +243,21 @@ describe("Location Store Reducer", () => {
       
       expect(newState.logs).toHaveLength(1);
       expect(newState.logs[0]).toEqual(log);
+    });
+
+    it("should generate a stable ID when payload.id is missing", () => {
+      const log = createMockLog();
+      // Simulate server sending a log without an id field
+      const logWithoutId = { ...log, id: "" } as LogData;
+      const action: LocationAction = { type: "ADD_LOG", payload: logWithoutId };
+
+      const newState = locationReducer(initialState, action);
+
+      expect(newState.logs).toHaveLength(1);
+      expect(newState.logs[0].id).toBeTruthy();
+      expect(newState.logs[0].id).toMatch(/^log-gen-/);
+      expect(newState.logs[0].device).toBe(log.device);
+      expect(newState.logs[0].log.message).toBe(log.log.message);
     });
 
     it("should limit logs to 500 per device", () => {
