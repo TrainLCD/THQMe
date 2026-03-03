@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import {
   Text,
   View,
@@ -240,7 +240,22 @@ export default function LogsScreen() {
   // Web fallback for maintainVisibleContentPosition (not supported in react-native-web)
   const isWeb = Platform.OS === "web";
   const listRef = useRef<FlatList<LogData>>(null);
-  const webScrollState = useRef({ offset: 0, contentHeight: 0 });
+  const webScrollState = useRef({ offset: 0, contentHeight: 0, isPrepend: false });
+  const prevFirstIdRef = useRef<string | undefined>(undefined);
+
+  // Detect when items are prepended (first item ID changes while list grows)
+  useEffect(() => {
+    if (!isWeb) return;
+    const firstId = filteredLogs.length > 0 ? filteredLogs[0].id : undefined;
+    if (
+      prevFirstIdRef.current !== undefined &&
+      firstId !== undefined &&
+      firstId !== prevFirstIdRef.current
+    ) {
+      webScrollState.current.isPrepend = true;
+    }
+    prevFirstIdRef.current = firstId;
+  }, [isWeb, filteredLogs]);
 
   const handleWebScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -252,7 +267,7 @@ export default function LogsScreen() {
   const handleWebContentSizeChange = useCallback(
     (_w: number, h: number) => {
       const prev = webScrollState.current;
-      if (prev.contentHeight > 0 && prev.offset > 0) {
+      if (prev.isPrepend && prev.contentHeight > 0 && prev.offset > 0) {
         const delta = h - prev.contentHeight;
         if (delta > 0) {
           listRef.current?.scrollToOffset({
@@ -261,6 +276,7 @@ export default function LogsScreen() {
           });
           prev.offset += delta;
         }
+        prev.isPrepend = false;
       }
       prev.contentHeight = h;
     },
