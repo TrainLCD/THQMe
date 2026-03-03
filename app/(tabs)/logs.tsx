@@ -348,6 +348,7 @@ export default function LogsScreen() {
 
       <FlatList
         ref={isWeb ? listRef : undefined}
+        style={styles.list}
         data={filteredLogs}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
@@ -615,6 +616,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
+  },
+  list: {
+    flex: 1,
   },
   listContent: {
     paddingHorizontal: 16,
