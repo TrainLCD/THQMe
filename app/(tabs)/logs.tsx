@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import {
   Text,
   View,
@@ -9,6 +9,8 @@ import {
   Alert,
   ScrollView,
   TextInput,
+  type NativeSyntheticEvent,
+  type NativeScrollEvent,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -234,6 +236,36 @@ export default function LogsScreen() {
   const handleClearSearch = useCallback(() => {
     setSearchQuery("");
   }, []);
+
+  // Web fallback for maintainVisibleContentPosition (not supported in react-native-web)
+  const isWeb = Platform.OS === "web";
+  const listRef = useRef<FlatList<LogData>>(null);
+  const webScrollState = useRef({ offset: 0, contentHeight: 0 });
+
+  const handleWebScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      webScrollState.current.offset = e.nativeEvent.contentOffset.y;
+    },
+    []
+  );
+
+  const handleWebContentSizeChange = useCallback(
+    (_w: number, h: number) => {
+      const prev = webScrollState.current;
+      if (prev.contentHeight > 0 && prev.offset > 0) {
+        const delta = h - prev.contentHeight;
+        if (delta > 0) {
+          listRef.current?.scrollToOffset({
+            offset: prev.offset + delta,
+            animated: false,
+          });
+          prev.offset += delta;
+        }
+      }
+      prev.contentHeight = h;
+    },
+    []
+  );
 
   const renderItem = useCallback(
     ({ item }: { item: LogData }) => (
@@ -530,6 +562,7 @@ export default function LogsScreen() {
       </View>
 
       <FlatList
+        ref={isWeb ? listRef : undefined}
         data={filteredLogs}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
@@ -537,9 +570,15 @@ export default function LogsScreen() {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         // スクロール中に先頭へアイテムが追加されてもスクロール位置を維持する
-        maintainVisibleContentPosition={{
-          minIndexForVisible: 0,
-        }}
+        // react-native-web では未サポートのため web 向けは手動で補正する
+        {...(!isWeb && {
+          maintainVisibleContentPosition: { minIndexForVisible: 0 },
+        })}
+        {...(isWeb && {
+          onScroll: handleWebScroll,
+          onContentSizeChange: handleWebContentSizeChange,
+          scrollEventThrottle: 16,
+        })}
         // パフォーマンス最適化
         initialNumToRender={10}
         maxToRenderPerBatch={5}
