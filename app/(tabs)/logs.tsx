@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import {
   Text,
   View,
@@ -9,6 +9,8 @@ import {
   Alert,
   ScrollView,
   TextInput,
+  type NativeSyntheticEvent,
+  type NativeScrollEvent,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -235,6 +237,52 @@ export default function LogsScreen() {
     setSearchQuery("");
   }, []);
 
+  // Web fallback for maintainVisibleContentPosition (not supported in react-native-web)
+  const isWeb = Platform.OS === "web";
+  const listRef = useRef<FlatList<LogData>>(null);
+  const webScrollState = useRef({ offset: 0, contentHeight: 0, isPrepend: false });
+  const prevFirstIdRef = useRef<string | undefined>(undefined);
+
+  // Detect when items are prepended (first item ID changes while list grows)
+  useEffect(() => {
+    if (!isWeb) return;
+    const firstId = filteredLogs.length > 0 ? filteredLogs[0].id : undefined;
+    if (
+      prevFirstIdRef.current !== undefined &&
+      firstId !== undefined &&
+      firstId !== prevFirstIdRef.current
+    ) {
+      webScrollState.current.isPrepend = true;
+    }
+    prevFirstIdRef.current = firstId;
+  }, [isWeb, filteredLogs]);
+
+  const handleWebScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      webScrollState.current.offset = e.nativeEvent.contentOffset.y;
+    },
+    []
+  );
+
+  const handleWebContentSizeChange = useCallback(
+    (_w: number, h: number) => {
+      const prev = webScrollState.current;
+      if (prev.isPrepend && prev.contentHeight > 0 && prev.offset > 0) {
+        const delta = h - prev.contentHeight;
+        if (delta > 0) {
+          listRef.current?.scrollToOffset({
+            offset: prev.offset + delta,
+            animated: false,
+          });
+          prev.offset += delta;
+        }
+        prev.isPrepend = false;
+      }
+      prev.contentHeight = h;
+    },
+    []
+  );
+
   const renderItem = useCallback(
     ({ item }: { item: LogData }) => (
       <View className="mb-3">
@@ -244,13 +292,31 @@ export default function LogsScreen() {
     []
   );
 
-  const keyExtractor = useCallback((item: LogData, index: number) => {
-    return item.id || `log-${item.timestamp}-${index}`;
-  }, []);
+  const keyExtractor = useCallback((item: LogData) => item.id, []);
 
-  const ListHeader = useMemo(
+  const ListEmpty = useMemo(
     () => (
-      <View className="mb-4">
+      <View className="flex-1 items-center justify-center py-20">
+        <Text style={{ fontSize: 64, lineHeight: 80 }} className="mb-4">📝</Text>
+        <Text className="text-lg font-semibold text-foreground mb-2">
+          {hasActiveFilter
+            ? "条件に一致するログがありません"
+            : "ログがありません"}
+        </Text>
+        <Text className="text-sm text-muted text-center px-8">
+          {hasActiveFilter
+            ? "フィルター条件を変更してください"
+            : "WebSocketに接続してログデータを受信してください"}
+        </Text>
+      </View>
+    ),
+    [hasActiveFilter]
+  );
+
+  return (
+    <ScreenContainer>
+      {/* ヘッダー部分（スクロールに追従して固定表示） */}
+      <View style={styles.stickyHeader}>
         {/* Header with status */}
         <View className="flex-row justify-between items-center mb-4">
           <Text className="text-2xl font-bold text-foreground">ログ</Text>
@@ -510,58 +576,25 @@ export default function LogsScreen() {
           )}
         </View>
       </View>
-    ),
-    [
-      state.connectionStatus,
-      state.logs.length,
-      searchQuery,
-      selectedTypes,
-      selectedLevels,
-      selectedDevices,
-      logDeviceIds,
-      filteredLogs.length,
-      hasActiveFilter,
-      handleClearData,
-      handleTypeSelect,
-      handleLevelSelect,
-      handleDeviceSelect,
-      handleClearSearch,
-      toggleFilter,
-      arrowStyle,
-      contentStyle,
-      colors.muted,
-    ]
-  );
 
-  const ListEmpty = useMemo(
-    () => (
-      <View className="flex-1 items-center justify-center py-20">
-        <Text style={{ fontSize: 64, lineHeight: 80 }} className="mb-4">📝</Text>
-        <Text className="text-lg font-semibold text-foreground mb-2">
-          {hasActiveFilter
-            ? "条件に一致するログがありません"
-            : "ログがありません"}
-        </Text>
-        <Text className="text-sm text-muted text-center px-8">
-          {hasActiveFilter
-            ? "フィルター条件を変更してください"
-            : "WebSocketに接続してログデータを受信してください"}
-        </Text>
-      </View>
-    ),
-    [hasActiveFilter]
-  );
-
-  return (
-    <ScreenContainer>
       <FlatList
+        ref={isWeb ? listRef : undefined}
         data={filteredLogs}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
-        ListHeaderComponent={ListHeader}
         ListEmptyComponent={ListEmpty}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        // スクロール中に先頭へアイテムが追加されてもスクロール位置を維持する
+        // react-native-web では未サポートのため web 向けは手動で補正する
+        {...(!isWeb && {
+          maintainVisibleContentPosition: { minIndexForVisible: 0 },
+        })}
+        {...(isWeb && {
+          onScroll: handleWebScroll,
+          onContentSizeChange: handleWebContentSizeChange,
+          scrollEventThrottle: 16,
+        })}
         // パフォーマンス最適化
         initialNumToRender={10}
         maxToRenderPerBatch={5}
@@ -574,8 +607,14 @@ export default function LogsScreen() {
 }
 
 const styles = StyleSheet.create({
+  stickyHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
   listContent: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 100,
   },
   filterScrollContent: {

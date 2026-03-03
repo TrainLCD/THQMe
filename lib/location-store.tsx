@@ -16,6 +16,8 @@ const WS_PROTOCOLS = ["thq", `thq-auth-${WS_AUTH_TOKEN}`];
 const MAX_UPDATES_PER_DEVICE = 500; // デバイスごとに保持する最大更新数
 const MAX_LOGS_PER_DEVICE = 500; // デバイスごとに保持する最大ログ数
 
+let logIdCounter = 0;
+
 /**
  * デバイスごとに最大件数を制限する
  * 配列の先頭が最新なので、先頭から数えて制限を超えた古いエントリを除外する
@@ -73,7 +75,9 @@ function locationReducer(state: LocationState, action: LocationAction): Location
       };
     }
     case "ADD_LOG": {
-      const log = action.payload;
+      const log = action.payload.id
+        ? action.payload
+        : { ...action.payload, id: `log-gen-${++logIdCounter}` };
       const newLogs = enforcePerDeviceLimit(
         [log, ...state.logs],
         MAX_LOGS_PER_DEVICE
