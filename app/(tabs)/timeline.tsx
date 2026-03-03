@@ -532,6 +532,7 @@ export default function TimelineScreen() {
       </View>
 
       <FlatList
+        style={styles.list}
         data={filteredUpdates}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
@@ -558,6 +559,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
+  },
+  list: {
+    flex: 1,
   },
   listContent: {
     paddingHorizontal: 16,
