@@ -315,7 +315,7 @@ export default function LogsScreen() {
 
   return (
     <ScreenContainer>
-      {/* ヘッダー部分（スクロールに追従して固定表示） */}
+      {/* ヘッダー部分（タイトル・検索のみ固定表示） */}
       <View style={styles.stickyHeader}>
         {/* Header with status */}
         <View className="flex-row justify-between items-center mb-4">
@@ -344,55 +344,64 @@ export default function LogsScreen() {
           )}
         </View>
 
-        {/* Filter Accordion */}
-        <View className="mb-4 bg-surface rounded-xl border border-border overflow-hidden">
-          {/* Accordion Header */}
-          <TouchableOpacity
-            onPress={toggleFilter}
-            activeOpacity={0.7}
-            style={styles.accordionHeader}
-          >
-            <View className="flex-1 flex-row items-center justify-between px-4">
-              <View className="flex-row items-center">
-                <Text className="text-base font-medium text-foreground">
-                  フィルター
-                </Text>
-                {(selectedTypes.size > 0 || selectedLevels.size > 0 || selectedDevices.size > 0) && (
-                  <View className="ml-2 bg-primary px-2 py-0.5 rounded-full">
-                    <Text className="text-xs text-white font-medium">適用中</Text>
-                  </View>
-                )}
-              </View>
-              <Animated.Text style={[styles.arrowIcon, arrowStyle]}>
-                ▼
-              </Animated.Text>
-            </View>
-          </TouchableOpacity>
+      </View>
 
-          {/* Accordion Content with Animation */}
-          <Animated.View style={contentStyle}>
-            <View className="px-4 pb-4 border-t border-border">
-              {/* Type Filter */}
-              <View className="mt-3">
-                <Text className="text-sm text-muted mb-2">タイプ</Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.filterScrollContent}
-                >
-                  {/* すべてボタン */}
-                  <TouchableOpacity
-                    onPress={() => handleTypeSelect(null)}
-                    activeOpacity={0.7}
-                    style={styles.filterButton}
-                  >
-                    <View
-                      className={cn(
-                        "px-3 py-2 rounded-full border",
-                        selectedTypes.size === 0
-                          ? "bg-primary border-primary"
-                          : "bg-background border-border"
-                      )}
+      <FlatList
+        ref={isWeb ? listRef : undefined}
+        data={filteredLogs}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        ListHeaderComponent={
+          <View style={styles.listHeaderContent}>
+            {/* Filter Accordion */}
+            <View className="mb-4 bg-surface rounded-xl border border-border overflow-hidden">
+              {/* Accordion Header */}
+              <TouchableOpacity
+                onPress={toggleFilter}
+                activeOpacity={0.7}
+                style={styles.accordionHeader}
+              >
+                <View className="flex-1 flex-row items-center justify-between px-4">
+                  <View className="flex-row items-center">
+                    <Text className="text-base font-medium text-foreground">
+                      フィルター
+                    </Text>
+                    {(selectedTypes.size > 0 || selectedLevels.size > 0 || selectedDevices.size > 0) && (
+                      <View className="ml-2 bg-primary px-2 py-0.5 rounded-full">
+                        <Text className="text-xs text-white font-medium">適用中</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Animated.Text style={[styles.arrowIcon, arrowStyle]}>
+                    ▼
+                  </Animated.Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* Accordion Content with Animation */}
+              <Animated.View style={contentStyle}>
+                <View className="px-4 pb-4 border-t border-border">
+                  {/* Type Filter */}
+                  <View className="mt-3">
+                    <Text className="text-sm text-muted mb-2">タイプ</Text>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.filterScrollContent}
+                    >
+                      {/* すべてボタン */}
+                      <TouchableOpacity
+                        onPress={() => handleTypeSelect(null)}
+                        activeOpacity={0.7}
+                        style={styles.filterButton}
+                      >
+                        <View
+                          className={cn(
+                            "px-3 py-2 rounded-full border",
+                            selectedTypes.size === 0
+                              ? "bg-primary border-primary"
+                              : "bg-background border-border"
+                          )}
                     >
                       <Text
                         className={cn(
@@ -557,31 +566,26 @@ export default function LogsScreen() {
                   </ScrollView>
                 </View>
               )}
+                </View>
+              </Animated.View>
             </View>
-          </Animated.View>
-        </View>
 
-        {/* Count info */}
-        <View className="flex-row justify-between items-center">
-          <Text className="text-sm text-muted">
-            {filteredLogs.length} 件のログ
-            {hasActiveFilter && (
-              <Text className="text-muted"> (全{state.logs.length}件)</Text>
-            )}
-          </Text>
-          {state.logs.length > 0 && (
-            <TouchableOpacity onPress={handleClearData} activeOpacity={0.7}>
-              <Text className="text-sm text-error">クリア</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      <FlatList
-        ref={isWeb ? listRef : undefined}
-        data={filteredLogs}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
+            {/* Count info */}
+            <View className="flex-row justify-between items-center">
+              <Text className="text-sm text-muted">
+                {filteredLogs.length} 件のログ
+                {hasActiveFilter && (
+                  <Text className="text-muted"> (全{state.logs.length}件)</Text>
+                )}
+              </Text>
+              {state.logs.length > 0 && (
+                <TouchableOpacity onPress={handleClearData} activeOpacity={0.7}>
+                  <Text className="text-sm text-error">クリア</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        }
         ListEmptyComponent={ListEmpty}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
@@ -616,6 +620,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 100,
+  },
+  listHeaderContent: {
+    paddingBottom: 8,
   },
   filterScrollContent: {
     gap: 8,
