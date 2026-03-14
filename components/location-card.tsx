@@ -135,7 +135,7 @@ export const LocationCard = memo(function LocationCard({ update }: LocationCardP
             🕐 {formatDate(update.timestamp)} {formatTimestamp(update.timestamp)}
           </Text>
         </View>
-        <View className="flex-row items-center gap-2">
+        <View className="flex-row items-center gap-2 flex-shrink" style={{ maxWidth: "55%" }}>
           <View
             className={cn("px-2 py-0.5 rounded-full", stateConf.bgClass)}
             style={{ borderWidth: 1, borderColor }}
@@ -144,7 +144,7 @@ export const LocationCard = memo(function LocationCard({ update }: LocationCardP
               {stateLabel}
             </Text>
           </View>
-          <Text className="text-muted text-base" numberOfLines={1}>
+          <Text className="text-muted text-base flex-shrink" numberOfLines={1} ellipsizeMode="tail">
             {update.device}
           </Text>
         </View>
