@@ -1,5 +1,5 @@
-import { memo, useMemo } from "react";
-import { View, Text } from "react-native";
+import { memo, useMemo, useState } from "react";
+import { View, Text, Pressable } from "react-native";
 import type { LocationUpdate, MovingState, BatteryState } from "@/lib/types/location";
 import { cn } from "@/lib/utils";
 import { useColors } from "@/hooks/use-colors";
@@ -122,6 +122,7 @@ export const LocationCard = memo(function LocationCard({ update }: LocationCardP
   const lineIds = useMemo(() => (update.line_id ? [update.line_id] : []), [update.line_id]);
   const lineNames = useLineNames(lineIds);
   // stateConfigに存在しない値の場合はフォールバックを使用
+  const [showDeviceTooltip, setShowDeviceTooltip] = useState(false);
   const stateConf = stateConfig[update.state as MovingState] || defaultStateConfig;
   const stateLabel = stateConf.label === "不明" && update.state ? String(update.state) : stateConf.label;
   const borderColor = colors[stateConf.colorKey];
@@ -141,9 +142,17 @@ export const LocationCard = memo(function LocationCard({ update }: LocationCardP
             {stateLabel}
           </Text>
         </View>
-        <Text className="text-muted text-base flex-1 flex-shrink" numberOfLines={1} ellipsizeMode="tail">
-          {update.device}
-        </Text>
+        <Pressable className="flex-1 flex-shrink" onPress={() => setShowDeviceTooltip((v) => !v)}>
+          <Text className="text-muted text-base" numberOfLines={1} ellipsizeMode="tail">
+            {update.device}
+          </Text>
+          {showDeviceTooltip && (
+            <View className="absolute top-full mt-1 right-0 bg-foreground rounded-lg px-3 py-1.5 z-50" style={{ elevation: 4 }}>
+              <Text className="text-background text-sm">{update.device}</Text>
+              <View className="absolute -top-1.5 right-3 w-3 h-3 bg-foreground rotate-45" />
+            </View>
+          )}
+        </Pressable>
       </View>
 
       {/* Route Name */}
