@@ -128,26 +128,22 @@ export const LocationCard = memo(function LocationCard({ update }: LocationCardP
 
   return (
     <View className="bg-surface rounded-xl p-4 border border-border">
-      {/* Header: DateTime + Device + State Badge */}
-      <View className="flex-row justify-between items-center mb-1">
-        <View className="flex-row items-center">
-          <Text className="text-foreground font-semibold text-base">
-            🕐 {formatDate(update.timestamp)} {formatTimestamp(update.timestamp)}
+      {/* Header: DateTime + State Badge + Device */}
+      <View className="flex-row items-center mb-1 gap-2">
+        <Text className="text-foreground font-semibold text-base">
+          🕐 {formatDate(update.timestamp)} {formatTimestamp(update.timestamp)}
+        </Text>
+        <View
+          className={cn("px-2 py-0.5 rounded-full", stateConf.bgClass)}
+          style={{ borderWidth: 1, borderColor }}
+        >
+          <Text className={cn("text-base font-medium", stateConf.textClass)}>
+            {stateLabel}
           </Text>
         </View>
-        <View className="flex-row items-center gap-2 flex-shrink" style={{ maxWidth: "55%" }}>
-          <View
-            className={cn("px-2 py-0.5 rounded-full", stateConf.bgClass)}
-            style={{ borderWidth: 1, borderColor }}
-          >
-            <Text className={cn("text-base font-medium", stateConf.textClass)}>
-              {stateLabel}
-            </Text>
-          </View>
-          <Text className="text-muted text-base flex-shrink" numberOfLines={1} ellipsizeMode="tail">
-            {update.device}
-          </Text>
-        </View>
+        <Text className="text-muted text-base flex-1 flex-shrink" numberOfLines={1} ellipsizeMode="tail">
+          {update.device}
+        </Text>
       </View>
 
       {/* Route Name */}
